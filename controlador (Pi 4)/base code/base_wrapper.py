@@ -1,4 +1,5 @@
 import I2C_0x10
+import time
 
 
 class Bomba:
@@ -6,7 +7,7 @@ class Bomba:
         self.address = 0x10
         self.device_name = "Modulo Bomba Flujometro"
 
-    def setear_potencia_bomba(potencia):
+    def setear_potencia_bomba(self, potencia):
         """
         Setea la potencia de la bomba.
         :param potencia: Potencia de la bomba (0-100).
@@ -16,4 +17,13 @@ class Bomba:
         else:
             I2C_0x10.send_command(self.address, 0, 0x01, [potencia])
 
+    def obtener_flujo(self):
+        """
+        Obtiene el flujo actual de la bomba.
+        :return: Flujo actual de la bomba.
+        """
+        I2C_0x10.send_command(self.address, 0, 0x02)
+        time.sleep(0.5)
+        id, cmd, data = I2C_0x10.receive_response(self.address)
+        return data
 
