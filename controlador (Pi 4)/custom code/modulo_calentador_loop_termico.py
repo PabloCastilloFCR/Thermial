@@ -27,6 +27,7 @@ class Calentador:
             return None
         response_id, response_cmd, response_data = response
         if response_cmd == 0x12 and len(response_data) == 4:
+            data = response_data
             temp1 = (data[0] + (data[1] << 8)) / 100.0
             temp2 = (data[2] + (data[3] << 8)) / 100.0
             return temp1, temp2

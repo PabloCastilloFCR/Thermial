@@ -1,5 +1,5 @@
 # --- Imports der Module ---
-from modulo_bomba_loop_termico_nuevo import Bomba    
+from modulo_bomba_flujo import Bomba    
 from modulo_valvulas_loop_termico import Valvulas    
 from modulo_calentador_loop_termico import Calentador
 from modulo_nivel_loop_termico import Nivel
