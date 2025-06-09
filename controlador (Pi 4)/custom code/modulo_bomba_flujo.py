@@ -36,3 +36,10 @@ class Bomba:
             return flow_value
         else:
             return None
+
+if __name__ == "__main__":
+    bomba = Bomba()
+    bomba.set_potencia(50)
+    time.sleep(1)
+    flujo = bomba.get_flujo()
+    print(f"Flujo actual: {flujo} l/min")
