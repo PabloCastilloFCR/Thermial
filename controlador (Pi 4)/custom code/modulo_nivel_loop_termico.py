@@ -1,7 +1,7 @@
 import I2C_0x13
 import time
 
-class ModuloTempNivel:
+class Nivel:
     def __init__(self):
         self.address = 0x13
         self.device_name = "Modulo Nivel"
