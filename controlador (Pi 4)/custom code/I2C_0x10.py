@@ -7,7 +7,7 @@ cmd_dict = {
     0x14 : "LEVEL"
 }
 
-def send_command(PICO_ADDRESS, id, cmd, data=[]):
+def send_command(PICO_ADDRESS, id, cmd, data=[], verbose = False):
     """
     Envía un comando al periferico.
     :param id: ID único del comando. No importa
@@ -19,18 +19,19 @@ def send_command(PICO_ADDRESS, id, cmd, data=[]):
     bus.write_i2c_block_data(PICO_ADDRESS, 0x00, packet)
     #print(f"Paquete enviado: {packet}")
     cmd_str = "SET" if cmd == 0x01 else "GET" #0x02 GET
-    print(f"Enviado: ADD={PICO_ADDRESS:02x}, CMD={cmd_str}, LEN={len(data)}, DATA={data}")
+    if verbose:
+        print(f"Enviado: ADD={PICO_ADDRESS:02x}, CMD={cmd_str}, LEN={len(data)}, DATA={data}")
 
-def receive_response(PICO_ADDRESS):
+def receive_response(PICO_ADDRESS, verbose=False)-> float:
     """
     Recibe la respuesta del periferico.
     """
-    
-    
+
     try:
         bus = smbus2.SMBus(1)  # Canal I2C en la Raspberry Pi 4 para comunicarse con la Rasp. Pi Pico
         data = bus.read_i2c_block_data(PICO_ADDRESS, 0x00, 5) ## <<< Aqui puede estar el error
-        print(f"Empfangene Rohdaten: {data}") #Debugging
+        if verbose:
+            print(f"Datos recibidos sin procesar: {data}") #Debugging
         response_id = data[0]
         response_cmd = data[1]
         response_len = data[2]
@@ -45,12 +46,13 @@ def receive_response(PICO_ADDRESS):
         if response_cmd == 0x13: # cmd para flow, Wenn es sich um die "FLOW"-Antwort handelt
             flow_value = response_data[0] + (response_data[1] << 8) #combina los dos Bytes
             flow_value /= 100.0 #wenn der Wert skaliert wurde, teile durch 100
-            
-            print(f"Flujo recibido: {flow_value:.2f}")#Fliesskommazahl ausgeben
+            if verbose:
+                print(f"Flujo recibido: {flow_value:.2f}")#Fliesskommazahl ausgeben
         
         #Ausgabe der gesamt empfangenen Antwort
-        print(f"Recibido: ADD={PICO_ADDRESS:02x}, CMD={response_cmd_str}, LEN={response_len}, DATA={response_data}")
-        return response_id, response_cmd, response_data
+        if verbose:
+            print(f"Recibido: ADD={PICO_ADDRESS:02x}, CMD={response_cmd_str}, LEN={response_len}, DATA={response_data}")
+        return flow_value
     except Exception as e:
         print(f"Error al leer la respuesta: {e}")
         return None

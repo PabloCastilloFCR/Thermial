@@ -5,6 +5,27 @@ from modulo_calentador_loop_termico import Calentador
 from modulo_nivel_loop_termico import Nivel
 import time
 
+
+class SolarLoop:
+    def __init__(self, bomba: Bomba, valvulas: Valvulas, calentador: Calentador, nivel: Nivel):
+        self.bomba = Bomba()
+        self.valvulas = Valvulas()
+        self.calentador = Calentador()
+        self.nivel = Nivel()
+
+    def potencia_bomba(self, potencia):
+        self.bomba.set_potencia(potencia)
+    
+    def get_flujo_bomba(self):
+        self.bomba.get_flujo()
+    
+    def potencia_calentador(self, pwm):
+        self.calentador.set_pwm_calentador(pwm)
+    
+    def temperaturas_calentador(self):
+        self.calentador.get_temperaturas()
+    
+    
 # --- Instanzen erstellen ---
 bomba = Bomba()
 valvulas = Valvulas()

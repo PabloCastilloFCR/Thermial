@@ -10,7 +10,7 @@ cmd_dict = {
     0x13: "FLOW"
 }
 
-def send_command(id, cmd, data=[]):
+def send_command(id, cmd, data=[], verbose = False):
     """
     Sendet einen Befehl an den Pico über I2C.
     :param id: Befehls-ID (kann ignoriert werden)
@@ -22,16 +22,17 @@ def send_command(id, cmd, data=[]):
     bus.write_i2c_block_data(PICO_ADDRESS, 0x00, packet)
     cmd_str = "SET" if cmd == 0x01 else "GET"
     cmd_str = cmd_dict.get(cmd, "UNKNOWN")
-    print(f"Enviado: ADD={PICO_ADDRESS:02x}, CMD={cmd_str}, LEN={len(data)}, DATA={data}")
+    if verbose:
+        print(f"Enviado: ADD={PICO_ADDRESS:02x}, CMD={cmd_str}, LEN={len(data)}, DATA={data}")
 
-def receive_response(address):
+def receive_response(address, verbose=False):
     """
     Recibe los datos del Pico y emite los datos del flujo
     """
     try:
         bus = smbus2.SMBus(1)
         data = bus.read_i2c_block_data(PICO_ADDRESS, 0x00, 7)  # 6 Bytes erwartet
-        print(f"Datos recibidos (sin procesar): {data}")  # Debugging
+        #print(f"Datos recibidos (sin procesar): {data}")  # Debugging
 
         response_cmd = data[0]
         response_len = data[1]
@@ -46,15 +47,18 @@ def receive_response(address):
             
             flow1 /= 100.0
             flow2 /= 100.0
-            print(f"Flow 1: {flow1:.2f} L/min, Flow 2: {flow2:.2f} L/min")
+            if verbose:
+                print(f"Flow 1: {flow1:.2f} L/min, Flow 2: {flow2:.2f} L/min")
             
             valvula1 = "abierta" if valve_status & 0x01 else "cerrada"
             valvula2 = "abierta" if valve_status & 0x02 else "cerrada"
-            print(f"Valvula 1 es {valvula1}, Valvula 2 es {valvula2}")
+            if verbose:
+                print(f"Valvula 1 es {valvula1}, Valvula 2 es {valvula2}")
 
-        print(f"Respuesta: ADD={PICO_ADDRESS:02x}, CMD={cmd_str}, LEN={response_len}, DATA={response_data}")
+        if verbose:
+            print(f"Respuesta: ADD={PICO_ADDRESS:02x}, CMD={cmd_str}, LEN={response_len}, DATA={response_data}")
         
-        return 0, response_cmd, response_data
+        return flow1, flow2, valvula1, valvula2
 
     except Exception as e:
         print(f"Error al leer la respuesta: {e}")
