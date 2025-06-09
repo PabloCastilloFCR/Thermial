@@ -1,4 +1,4 @@
-import I2C_0x12  
+import i2c_0x12  
 import time
 
 class Valvulas:
@@ -12,9 +12,9 @@ class Valvulas:
         :param numero: 1 para válvula 1, 2 para válvula 2
         """
         if numero == 1:
-            I2C_0x12.send_command(self.address, 0, 0x01, [1])
+            i2c_0x12.send_command(self.address, 0x01, [1])
         elif numero == 2:
-            I2C_0x12.send_command(self.address, 0, 0x01, [2])
+            i2c_0x12.send_command(self.address, 0x01, [2])
         else:
             raise ValueError("Solo puedes sólo puede pasar un valor entre 1 y 2")
 
@@ -24,9 +24,9 @@ class Valvulas:
         :param numero: 1 para válvula 1, 2 para válvula 2
         """
         if numero == 1:
-            I2C_0x12.send_command(self.address, 0, 0x01, [3])
+            i2c_0x12.send_command(self.address, 0x01, [3])
         elif numero == 2:
-            I2C_0x12.send_command(self.address, 0, 0x01, [4])
+            i2c_0x12.send_command(self.address, 0x01, [4])
         else:
             raise ValueError("Solo puedes sólo puede pasar un valor entre 1 y 2")
 
@@ -35,9 +35,9 @@ class Valvulas:
         Solicita y devuelve los valores de los dos flujómetros.
         :return: (flow1, flow2)
         """
-        I2C_0x12.send_command(self.address, 0, 0x02)
+        i2c_0x12.send_command(self.address, 0x02, [])
         time.sleep(0.5)
-        response = I2C_0x12.receive_response(self.address)
+        response = i2c_0x12.receive_response(self.address)
         if response is None:
             return None
         response_id, response_cmd, response_data = response

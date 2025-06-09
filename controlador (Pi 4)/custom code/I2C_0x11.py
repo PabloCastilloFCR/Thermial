@@ -20,6 +20,7 @@ def send_command(PICO_ADDRESS, id, cmd, data=[]):
 
 def receive_response(PICO_ADDRESS):
     try:
+        bus = smbus2.SMBus(1)  # Canal I2C en la Raspberry Pi 4 para comunicarse con la Rasp. Pi Pico
         data = bus.read_i2c_block_data(PICO_ADDRESS, 0x00, 8) #expectando 8 bytes
         print(f"Datos recibidos (sin procesar): {data}")
         response_id = data[0]

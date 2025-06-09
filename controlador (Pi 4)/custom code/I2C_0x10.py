@@ -25,9 +25,10 @@ def receive_response(PICO_ADDRESS):
     """
     Recibe la respuesta del periferico.
     """
-    #bus = smbus2.SMBus(1)  # Canal I2C en la Raspberry Pi 4 para comunicarse con la Rasp. Pi Pico
+    
     
     try:
+        bus = smbus2.SMBus(1)  # Canal I2C en la Raspberry Pi 4 para comunicarse con la Rasp. Pi Pico
         data = bus.read_i2c_block_data(PICO_ADDRESS, 0x00, 5) ## <<< Aqui puede estar el error
         print(f"Empfangene Rohdaten: {data}") #Debugging
         response_id = data[0]
