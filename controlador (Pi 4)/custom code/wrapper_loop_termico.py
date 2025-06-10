@@ -18,7 +18,7 @@ logger.addHandler(handler)
 # Toggle verbosity here:
 logger.setLevel(logging.INFO)    # verbose: INFO, DEBUG
 # logger.setLevel(logging.WARNING)  # quiet: WARNING, ERROR, CRITICAL
-
+#Comentario de prueba
 
 class SolarLoop:
     """
@@ -137,6 +137,3 @@ if __name__ == "__main__":
     loop.stop()
     time.sleep(1)
     loop.print_status()
-
-    
-    
