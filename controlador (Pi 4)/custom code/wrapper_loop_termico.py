@@ -26,7 +26,7 @@ class SolarLoop:
     Todos los mensajes van al logger 'solarloop'. Verbose = nivel INFO.
     """
 
-    def __init__(self, bomba: Bomba, valvulas: Valvulas, calentador: Calentador, estanque: Estanque, verbose = False):
+    def __init__(self, bomba = Bomba, valvulas = Valvulas, calentador = Calentador, estanque =  Estanque, verbose = False):
         self.bomba = Bomba()
         self.valvulas = Valvulas()
         self.calentador = Calentador()
@@ -41,6 +41,9 @@ class SolarLoop:
         self.log = logging.getLogger("solarloop")
 
     def potencia_bomba(self, potencia, verbose = False):
+        """
+        potencia: entero de 0 a 100. Solo numero.
+        """
         self.bomba.set_potencia(potencia)
         self.log.info("Potencia de la bomba a %d%%", self.bomba.potencia)
         
