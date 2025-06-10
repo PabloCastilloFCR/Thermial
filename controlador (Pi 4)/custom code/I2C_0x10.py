@@ -1,11 +1,7 @@
 import smbus2
 import time
+from cmd_dictionary import cmd_dict
 
-cmd_dict = {
-    0x12 : "TEMPERATURE",
-    0x13 : "FLOW",
-    0x14 : "LEVEL"
-}
 
 def send_command(PICO_ADDRESS, id, cmd, data=[], verbose = False):
     """
@@ -60,31 +56,30 @@ def receive_response(PICO_ADDRESS, verbose=False)-> float:
 
 if __name__ == "__main__":
     # uC = microcontrolador
-    PICO_ADDRESSES = [0x10] #, 0x11, 0x12, 0x13]  # Direcciones I2C de los uC
+    PICO_ADDRESSES = 0x10 #, 0x11, 0x12, 0x13]  # Direcciones I2C de los uC
     bus = smbus2.SMBus(1)  # Canal I2C en la Raspberry Pi 4
 
     value = 70
     increment = 5
 
     while True:
-        for pico_add in PICO_ADDRESSES:
-            # Enviar comando SET con el valor actual de value 
-            send_command(pico_add, 0, 0x01, [value])
-            time.sleep(0.5)
+        # Enviar comando SET con el valor actual de value 
+        send_command(PICO_ADDRESSES, 0, 0x01, [value])
+        time.sleep(0.5)
 
-            # Enviar comando GET
-            send_command(pico_add, 0, 0x02)
-            time.sleep(0.5)
+        # Enviar comando GET
+        send_command(PICO_ADDRESSES, 0, 0x02)
+        time.sleep(0.5)
 
-            # Leer la respuesta del dispositivo
-            receive_response(pico_add) #<< aqui esta fallando. 
-            
-            time.sleep(0.5)
-            # Enviar comando SET con el value = 0
-            #send_command(pico_add, 0, 0x01, [0])
+        # Leer la respuesta del dispositivo
+        receive_response(PICO_ADDRESSES) #<< aqui esta fallando. 
+        
+        time.sleep(0.5)
+        # Enviar comando SET con el value = 0
+        #send_command(pico_add, 0, 0x01, [0])
 
-        # Incrementar o decrementar el valor de X
-        value += increment
-        if value > 100 or value < 70:
-            increment = -increment  # Cambiar la dirección de incremento
-            value += increment  # Ajustar X dentro del rango
+    # Incrementar o decrementar el valor de X
+    value += increment
+    if value > 100 or value < 70:
+        increment = -increment  # Cambiar la dirección de incremento
+        value += increment  # Ajustar X dentro del rango

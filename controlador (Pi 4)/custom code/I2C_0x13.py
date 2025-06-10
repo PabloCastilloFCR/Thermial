@@ -1,25 +1,17 @@
 import smbus2
 import time
+from cmd_dictionary import cmd_dict
  
-cmd_dict = {
-    0x01: "SET",
-    0x02: "GET",
-    0x03: "GET_LEVEL",
-    0x12: "TEMPERATURE",
-    0x13: "FLOW",
-    0x14: "LEVEL",
-    0x15: "PWM"
-}
- 
-def send_command(addr, id_byte, cmd):
+def send_command(addr, id_byte, cmd, verbose=False):
     bus = smbus2.SMBus(1)
     packet = bytes([id_byte, cmd, 0])
     write = smbus2.i2c_msg.write(addr, packet)
     bus.i2c_rdwr(write)
     bus.close()
-    print(f"Enviado: ADD={addr:02x}, CMD={cmd_dict.get(cmd,cmd)}, LEN=0, DATA=[]")
+    if verbose:
+        print(f"Enviado: ADD={addr:02x}, CMD={cmd_dict.get(cmd,cmd)}, LEN=0, DATA=[]")
  
-def receive_response(addr):
+def receive_response(addr, verbose=False):
     # Leemos primero cabecera de 3 bytes
     bus=smbus2.SMBus(1)
     raw = smbus2.i2c_msg.read(addr, 8)
@@ -41,20 +33,24 @@ def receive_response(addr):
 
     payload = data[3:3 + response_len]
 
-    print(f"[DEBUG] payload = {payload} (hex: {[hex(b) for b in payload]})")
+    if verbose:
+        print(f"[DEBUG] payload = {payload} (hex: {[hex(b) for b in payload]})")
 
     if response_cmd == 0x12 and response_len == 4:
         t3 = (payload[0] | (payload[1] << 8)) / 100.0
         t4 = (payload[2] | (payload[3] << 8)) / 100.0
-        print(f"temperatura recibida: Temp3={t3:.2f}°C, Temp4={t4:.2f}°C")
+        if verbose:
+            print(f"temperatura recibida: Temp3={t3:.2f}°C, Temp4={t4:.2f}°C")
     elif response_cmd == 0x14 and response_len == 2:
         lvl_raw = (payload[0] | (payload[1] << 8))
         lvl = lvl_raw / 10.0
-        print(f"nivel recibido: {lvl:.2f} cm")
- 
-    print(f"Recibido: ID={response_id:02x}, ADD={addr:02x}, CMD={cmd_dict.get(response_cmd,response_cmd)}, LEN={response_len}, DATA={payload}")
+        if verbose:
+            print(f"nivel recibido: {lvl:.2f} cm")
     
-    return response_id, response_cmd, payload
+    if verbose:
+        print(f"Recibido: ID={response_id:02x}, ADD={addr:02x}, CMD={cmd_dict.get(response_cmd,response_cmd)}, LEN={response_len}, DATA={payload}")
+    
+    return response_cmd, payload
 
  
 if __name__ == "__main__":

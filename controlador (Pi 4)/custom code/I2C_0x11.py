@@ -1,15 +1,7 @@
 import smbus2
 import time
+from cmd_dictionary import cmd_dict
 
-cmd_dict = {
-    0x01: "SET",
-    0x02: "GET", #Obtener valores sensores
-    0x03: "GET_PWM",
-    0x12: "TEMPERATURE",
-    0x13: "FLOW",
-    0x14: "LEVEL",
-    0x15: "PWM"
-}
 
 def send_command(PICO_ADDRESS, id, cmd, data=[], verbose = False):
     bus = smbus2.SMBus(1)  # I2C Bus der Raspberry Pi 4

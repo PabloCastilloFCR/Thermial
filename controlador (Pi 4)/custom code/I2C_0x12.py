@@ -1,14 +1,8 @@
 import smbus2
 import time
+from cmd_dictionary import cmd_dict
 
-# I2C-Adresse des Pico
-PICO_ADDRESS = 0x12  
 
-cmd_dict = {
-    0x01: "SET",
-    0x02: "GET",
-    0x13: "FLOW"
-}
 
 def send_command(id, cmd, data=[], verbose = False):
     """
@@ -63,7 +57,9 @@ def receive_response(address, verbose=False):
     except Exception as e:
         print(f"Error al leer la respuesta: {e}")
         return None
-             
+""" 
+Voy a comentar estas funciones porque están fuera de la norma que definimos.
+
 def abrir_valvula1():
      send_command(0, 0x01, [1])
      time.sleep(1)
@@ -83,10 +79,13 @@ def cerrar_valvula2():
     send_command(0, 0x01, [4])
     time.sleep(0.1)
     receive_response(0)
+"""
     
 if __name__ == "__main__":
+    # I2C-Adresse des Pico
+    PICO_ADDRESS = 0x12  
     bus = smbus2.SMBus(1)  # I2C-Kanal des Raspberry Pi 4
-    abrir_valvula1()
+    
     time.sleep(2)
     #abrir_valvula2()
     #time.sleep(2)
