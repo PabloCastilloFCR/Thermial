@@ -18,10 +18,10 @@ class Valvulas:
         """
 
         if numero == 1:
-            i2c_0x12.send_command(self.address, 0x01, [1])
+            i2c_0x12.send_command(self.address, 0x01, [3])
             self.state_valve1 = True
         elif numero == 2:
-            i2c_0x12.send_command(self.address, 0x01, [2])
+            i2c_0x12.send_command(self.address, 0x01, [4])
             self.state_valve2 = True
         else:
             raise ValueError("Solo puedes sólo puede pasar un valor entre 1 y 2")
@@ -32,10 +32,10 @@ class Valvulas:
         :param numero: 1 para válvula 1, 2 para válvula 2
         """
         if numero == 1:
-            i2c_0x12.send_command(self.address, 0x01, [3])
+            i2c_0x12.send_command(self.address, 0x01, [1])
             self.state_valve1 = False
         elif numero == 2:
-            i2c_0x12.send_command(self.address, 0x01, [4])
+            i2c_0x12.send_command(self.address, 0x01, [1])
             self.state_valve2 = False
         else:
             raise ValueError("Solo puedes sólo puede pasar un valor entre 1 y 2")

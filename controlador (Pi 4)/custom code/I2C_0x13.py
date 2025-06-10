@@ -20,7 +20,7 @@ def receive_response(addr, verbose=False):
     bus.close()
     
     if len(data) < 3:
-        print("Antwort zu kurz:", data)
+        print("Respuesta demasiado corta", data)
         return
 
     response_id = data[0]
@@ -28,7 +28,7 @@ def receive_response(addr, verbose=False):
     response_len = data[2]
 
     if len(data) < 3 + response_len:
-        print("Nicht genug Payload empfangen:", data)
+        print("No hay suficientes datos recibidos:", data)
         return
 
     payload = data[3:3 + response_len]
@@ -50,7 +50,7 @@ def receive_response(addr, verbose=False):
     if verbose:
         print(f"Recibido: ID={response_id:02x}, ADD={addr:02x}, CMD={cmd_dict.get(response_cmd,response_cmd)}, LEN={response_len}, DATA={payload}")
     
-    return response_cmd, payload
+    return payload
 
  
 if __name__ == "__main__":
