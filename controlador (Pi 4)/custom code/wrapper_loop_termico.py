@@ -43,7 +43,7 @@ class SolarLoop:
     def potencia_bomba(self, potencia, verbose = False):
         self.bomba.set_potencia(potencia)
         self.log.info("Potencia de la bomba a %d%%", self.bomba.potencia)
-    
+        
     def obtener_flujo_bomba(self, verbose = False):
         self.bomba.get_flujo()
         self.log.info("Flujo bomba: %.2f L/min", self.bomba.flujo)
@@ -67,7 +67,7 @@ class SolarLoop:
         self.valvulas.cerrar_valvula(numero)
         self.log.info("Válvula %d cerrada", numero)
 
-    def flujos_valvulas(self):
+    def obtener_flujos_valvulas(self):
         self.valvulas.get_flujos()
         f1 = self.valvulas.flow1
         f2 = self.valvulas.flow2
@@ -108,6 +108,7 @@ class SolarLoop:
     
     def update_status(self):
         self.obtener_flujo_bomba()
+        self.obtener_flujos_valvulas()
         self.obtener_temperaturas_calentador()
         self.obtener_temperaturas_estanque()
         self.obtener_nivel_estanque()
@@ -131,6 +132,7 @@ if __name__ == "__main__":
     loop.print_status()
     time.sleep(10)
     loop.stop()
+    time.sleep(1)
     loop.print_status()
 
     
