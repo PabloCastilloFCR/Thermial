@@ -1,8 +1,6 @@
-from modulo_bomba_loop_termico_nuevo import Bomba
-from modulo_valvulas_loop_termico import Valvulas
+from wrapper_loop_termico import SolarLoop
+import time
 
-bomba = Bomba()
-valvulas = Valvulas()
-bomba.set_potencia(0)
-valvulas.abrir_valvula(1)
-valvulas.abrir_valvula(2)
+loop = SolarLoop(verbose=True)
+
+loop.stop()
