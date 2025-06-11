@@ -16,7 +16,6 @@ class Valvulas:
         Abre una válvula específica.
         :param numero: 1 para válvula 1, 2 para válvula 2
         """
-
         if numero == 1:
             i2c_0x12.send_command(self.address, 0x01, [3])
             self.state_valve1 = True
@@ -35,7 +34,7 @@ class Valvulas:
             i2c_0x12.send_command(self.address, 0x01, [1])
             self.state_valve1 = False
         elif numero == 2:
-            i2c_0x12.send_command(self.address, 0x01, [1])
+            i2c_0x12.send_command(self.address, 0x01, [2])
             self.state_valve2 = False
         else:
             raise ValueError("Solo puedes sólo puede pasar un valor entre 1 y 2")
@@ -46,5 +45,5 @@ class Valvulas:
         """
         i2c_0x12.send_command(self.address, 0x02, [])
         time.sleep(0.5)
-        self.flow1, self.flow2, _ = i2c_0x12.receive_response(self.address)
+        self.flow1, self.flow2, _, _ = i2c_0x12.receive_response(self.address)
         

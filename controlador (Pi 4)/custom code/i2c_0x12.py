@@ -11,6 +11,7 @@ def send_command(id, cmd, data=[], verbose = False):
     :param cmd: Befehlscode (1 Byte)
     :param data: Zusätzliche Daten (Liste von Bytes)
     """
+    PICO_ADDRESS = 0x12
     bus = smbus2.SMBus(1)  # I2C-Kanal des Raspberry Pi 4
     packet = [id, cmd, len(data)] + data
     bus.write_i2c_block_data(PICO_ADDRESS, 0x00, packet)
@@ -23,6 +24,7 @@ def receive_response(address, verbose=False):
     """
     Recibe los datos del Pico y emite los datos del flujo
     """
+    PICO_ADDRESS = 0x12
     try:
         bus = smbus2.SMBus(1)
         data = bus.read_i2c_block_data(PICO_ADDRESS, 0x00, 7)  # 6 Bytes erwartet
@@ -56,7 +58,7 @@ def receive_response(address, verbose=False):
 
     except Exception as e:
         print(f"Error al leer la respuesta: {e}")
-        return None
+        return None, None, None, None
 """ 
 Voy a comentar estas funciones porque están fuera de la norma que definimos.
 
