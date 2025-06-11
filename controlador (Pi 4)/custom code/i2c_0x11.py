@@ -1,27 +1,21 @@
 import smbus2
 import time
+from cmd_dictionary import cmd_dict
 
-cmd_dict = {
-    0x01: "SET",
-    0x02: "GET", #Obtener valores sensores
-    0x03: "GET_PWM",
-    0x12: "TEMPERATURE",
-    0x13: "FLOW",
-    0x14: "LEVEL",
-    0x15: "PWM"
-}
 
-def send_command(PICO_ADDRESS, id, cmd, data=[]):
+def send_command(PICO_ADDRESS, id, cmd, data=[], verbose = False):
     bus = smbus2.SMBus(1)  # I2C Bus der Raspberry Pi 4
     packet = [id, cmd, len(data)] + data
     bus.write_i2c_block_data(PICO_ADDRESS, 0x00, packet)
     cmd_str = "SET" if cmd == 0x01 else "GET"
-    print(f"Enviado: ADD={PICO_ADDRESS:02x}, CMD={cmd_str}, LEN={len(data)}, DATA={data}")
+    if verbose:
+        print(f"Enviado: ADD={PICO_ADDRESS:02x}, CMD={cmd_str}, LEN={len(data)}, DATA={data}")
 
-def receive_response(PICO_ADDRESS):
+def receive_response(PICO_ADDRESS, verbose = False):
     try:
+        bus = smbus2.SMBus(1)  # Canal I2C en la Raspberry Pi 4 para comunicarse con la Rasp. Pi Pico
         data = bus.read_i2c_block_data(PICO_ADDRESS, 0x00, 8) #expectando 8 bytes
-        print(f"Datos recibidos (sin procesar): {data}")
+        #print(f"Datos recibidos (sin procesar): {data}")
         response_id = data[0]
         response_cmd = data[1]
         response_len = data[2]
@@ -38,23 +32,25 @@ def receive_response(PICO_ADDRESS):
                 temp2_value = response_data[2] + (response_data[3] << 8)
                 temp1_value /= 100.0
                 temp2_value /= 100.0
-                print("bytes recibidos:", response_data)
-                print(f"temperatura recibida: Temp1 = {temp1_value:.2f}°C, Temp2 = {temp2_value:.2f}°C")
+                #print("bytes recibidos:", response_data)
+                if verbose:
+                    print(f"temperatura recibida: Temp1 = {temp1_value:.2f}°C, Temp2 = {temp2_value:.2f}°C")
+                return temp1_value, temp2_value
+            
             else:
                 print(f"Error: datos incompletos, esperando 4 bytes pero recibo: {response_len}: {response_data}")
-    except Exception as e:
-            print(f"Error al leer la respuesta: {e}")
-            
-            
-            if response_cmd == 0x15: # PWM-Wert
-                pwm_value = response_data[0]
+                return None
+                      
+        if response_cmd == 0x15: # PWM-Wert
+            pwm_value = response_data[0]
+            if verbose:
                 print(f"PWM recibido: {pwm_value}%")
-
                 print(f"Recibido: ADD={PICO_ADDRESS:02x}, CMD={response_cmd_str}, LEN={response_len}, DATA={response_data}")
-            return response_id, response_cmd, response_data
+        return response_id, response_cmd, response_data
         
     except Exception as e:
-        print(f"Error al leer la respuesta: {e}")
+        if verbose:
+            print(f"Error al leer la respuesta: {e}")
         return None
 
 if __name__ == "__main__":

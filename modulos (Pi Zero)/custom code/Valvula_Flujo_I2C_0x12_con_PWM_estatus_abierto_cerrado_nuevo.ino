@@ -4,7 +4,9 @@
 #define I2C_ADDRESS 0x12  
 #define CMD_SET_VALVE 0x01  // orden para estatus de la válvula
 #define CMD_GET_FLOW  0x02  // orden para recibir flujo
+#define CMD_GET_VALVE_STATUS 0x03 // estatus de las valvulas
 #define RESP_FLOW     0x13  // respuesta para flujo
+#define RESP_VALVE_STATUS 0x14 // respuesta para valvulas
 
 // Pins para las válvulas
 #define RELAY_PIN_1 15
@@ -72,12 +74,22 @@ void loop() {
 
 // Función de recepción de datos I2C, se llama cuando el maestro envía datos al periferico
 void receiveEvent(int bytes_msg) {
-    Serial.print("I2C Nachricht erhalten, Bytes: ");
+    Serial.print("I2C mensaje recibido, Bytes: ");
     Serial.println(bytes_msg);
 
-    if (bytes_msg < 2) return;
+    if (bytes_msg < 4) return;
+
+    uint8_t reg = Wire.read();
+    uint8_t id  = Wire.read();
     uint8_t cmd = Wire.read();
-    uint8_t valve = Wire.read();
+    uint8_t len = Wire.read();
+
+    uint8_t valve = 0;
+    if (len > 0 && Wire.available()) {
+        valve = Wire.read();  // Ventil-Daten lesen
+    }
+    
+    //lastCommand = cmd;
 
     Serial.print("Orden: ");
     Serial.print(cmd);
@@ -106,10 +118,22 @@ void requestEvent() {
     uint16_t flow1_scaled = static_cast<uint16_t>(flowRate1 * 100);
     uint16_t flow2_scaled = static_cast<uint16_t>(flowRate2 * 100);
 
-    uint8_t response[6] = {RESP_FLOW, 4,
+     // leer estatus de las válvulas
+    uint8_t valve_status = 0;
+    if (digitalRead(RELAY_PIN_1)) valve_status |= 0x01;  // Bit 0 = Ventil 1
+    if (digitalRead(RELAY_PIN_2)) valve_status |= 0x02;  // Bit 1 = Ventil 2
+
+    uint8_t response[7] = {RESP_FLOW, 5,
         (uint8_t)(flow1_scaled & 0xFF), (uint8_t)((flow1_scaled >> 8) & 0xFF),
-        (uint8_t)(flow2_scaled & 0xFF), (uint8_t)((flow2_scaled >> 8) & 0xFF)
+        (uint8_t)(flow2_scaled & 0xFF), (uint8_t)((flow2_scaled >> 8) & 0xFF),
+        valve_status
     };
-    Wire.write(response, 6);
-    Serial.println("Datos de flujo enviados");
+    Wire.write(response, 7);
+    Serial.print("Response: [");
+    for (int i = 0; i < 7; i++) {
+        Serial.print(response[i]);
+        if (i < 6) Serial.print(", ");
+    }
+    Serial.println("]");
+    Serial.println("Datos de flujo y estado de válvulas enviados");
 }
