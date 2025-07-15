@@ -1,9 +1,9 @@
 # --- Imports der Module ---
 import logging
-from modulo_bomba_loop_termico_nuevo import Bomba    
-from modulo_valvulas_loop_termico import Valvulas    
-from modulo_calentador_loop_termico import Calentador
-from modulo_nivel_loop_termico import Estanque
+from modulo_bomba_flujometro import Bomba    
+from modulo_valvulas import Valvulas    
+from modulo_calentador import Calentador
+from modulo_estanque import Estanque
 import time
 import pandas as pd
 from datetime import datetime

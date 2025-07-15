@@ -1,5 +1,5 @@
-from modulo_bomba_loop_termico_nuevo import Bomba    
-from modulo_valvulas_loop_termico import Valvulas
+from modulo_bomba_flujometro import Bomba    
+from modulo_valvulas import Valvulas
 import time  
 
 bomba = Bomba()

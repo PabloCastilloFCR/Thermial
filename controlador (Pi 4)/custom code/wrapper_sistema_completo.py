@@ -4,9 +4,9 @@ import pandas as pd
 
 
 from modulo_bomba_flujometro import Bomba    
-from modulo_valvulas_loop_termico import Valvulas    
-from modulo_calentador_loop_termico import Calentador
-from modulo_estanque_loop_termico import Estanque
+from modulo_valvulas import Valvulas    
+from modulo_calentador import Calentador
+from modulo_estanque import Estanque
 from modulo_dissipador_loop_proceso import Dissipador
 
 shared_data_log = []
@@ -29,7 +29,6 @@ class SolarLoop:
     def __init__(self, verbose=False):
         self.verbose = verbose
         self.bomba = Bomba()
-
         self.calentador = Calentador()
         self.valvulas = Valvulas()
         self.estanque = Estanque()
@@ -110,14 +109,18 @@ class SolarLoop:
 class ProcessLoop:
     def __init__(self, verbose=False):
         self.verbose = verbose
+        self.bomba = Bomba(0x15)
         self.dissipador = Dissipador()
 
-
-    def stop(self):
-        self.potencia_dissipador(0)
+    def potencia_bomba(self, value):
+        self.bomba.set_potencia(value)
 
     def potencia_dissipador(self, value):
         self.dissipador.set_pwm_ventilador(value)
+
+    def stop(self):
+        self.potencia_dissipador(0)
+        self.potencia_bomba(0)
 
     def append_to_data_log(self, timestamp):
         self.dissipador.get_temperaturas()

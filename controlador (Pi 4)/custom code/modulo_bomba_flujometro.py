@@ -3,8 +3,8 @@ import time
 
 
 class Bomba:
-    def __init__(self):
-        self.address = 0x10
+    def __init__(self, address = 0x10):
+        self.address = address
         self.device_name = "Modulo Bomba Flujometro"
         self.potencia = 0
         self.flujo = 0
