@@ -45,8 +45,11 @@ class Estanque:
         response_data = response
 
         if len(response_data) >= 2:
-            nivel = response_data[0] | (response_data[1] << 8)
+            lvl_raw = response_data[0] | (response_data[1] << 8)
+            measured_distance = lvl_raw / 10.0
+            tank_height = 31.8
+            nivel = max(0.0, tank_height - measured_distance)
             self.nivel = nivel
-            print(f"nivel recibido: {nivel:.1f} cm")
+            print(f"nivel recibido: {nivel:.2f} cm")
         else:
             self.nivel = -1
