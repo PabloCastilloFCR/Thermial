@@ -1,3 +1,5 @@
 gitignore
 
-*.xlsx
+.venv
+*.pyc
+*.csv

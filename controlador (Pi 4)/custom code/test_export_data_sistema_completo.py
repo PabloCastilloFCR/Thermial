@@ -1,4 +1,4 @@
-from wrapper_sistema_completo_dos_bombas import SolarLoop, ProcessLoop, export_to_csv, clear_data_log
+from wrapper_sistema_completo import SolarLoop, ProcessLoop, export_to_csv, clear_data_log
 import time
 import threading
 from datetime import datetime
@@ -24,7 +24,7 @@ solar_loop.stop()
 process_loop.stop()
 clear_data_log()
 
-solar_loop.potencia_calentador(100)
+solar_loop.potencia_calentador(0)
 log_all_data()
 
 
@@ -35,10 +35,7 @@ log_all_data()
 print("Esperando 10 segundos...")
 time.sleep(10)
 
-solar_loop.potencia_bomba1(90)
-log_all_data()
-
-process_loop.potencia_bomba2(90)
+solar_loop.potencia_bomba(100)
 log_all_data()
 
 process_loop.potencia_dissipador(0)
@@ -49,7 +46,7 @@ print("Haciendo mediciones")
 
 # Funktionen, um beide Tests gleichzeitig zu starten
 def solar_test():
-    solar_loop.run_synchronized_test(process_loop, duration_minutes=180, interval_seconds=20)        # testeando solar loop para x minutos, colectando datos cada y segundos
+    solar_loop.run_synchronized_test(process_loop, duration_minutes=10, interval_seconds=10)        # testeando solar loop para x minutos, colectando datos cada y segundos
 
 def process_test():
     pass
@@ -58,19 +55,12 @@ def process_test():
 solar_thread = threading.Thread(target=solar_test)
 process_thread = threading.Thread(target=process_test)
 
-def control_bomba2_temporal():
-     time.sleep(3600)  # 1 Stunde warten
-     process_loop.potencia_bomba2(0)
-     print("Bomba2 activada al 100%.")
+#def control_calentador_temporal():
+#    solar_loop.potencia_calentador(100)
+#    time.sleep(1800)  # 30 Minuten
+#    solar_loop.potencia_calentador(0)
 
-def control_dissipador_temporal():
-     time.sleep(3600)  # 1 Stunde warten
-     process_loop.potencia_dissipador(0)
-     print("Dissipador activado al 100%.")
-
-#threading.Thread(target=control_bomba2_temporal).start()
-#threading.Thread(target=control_dissipador_temporal).start()
-
+#threading.Thread(target=control_calentador_temporal).start()
 
 solar_thread.start()
 process_thread.start()
@@ -78,9 +68,8 @@ process_thread.start()
 solar_thread.join()
 process_thread.join()
 
-solar_loop.potencia_bomba1(0)
+solar_loop.potencia_bomba(0)
 solar_loop.potencia_calentador(0)
-process_loop.potencia_bomba2(0)
 process_loop.potencia_dissipador(0)
 log_all_data()
 

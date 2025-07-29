@@ -32,6 +32,7 @@ def receive_response(PICO_ADDRESS, verbose=False)-> float:
         response_cmd = data[1]
         response_len = data[2]
         response_data = data[3:3+response_len] #<< Revisar
+        print("Raw bytes:", response_data)
         
         if response_cmd in cmd_dict:
             response_cmd_str = cmd_dict[response_cmd]
@@ -42,8 +43,8 @@ def receive_response(PICO_ADDRESS, verbose=False)-> float:
         if response_cmd == 0x13: # cmd para flow, Wenn es sich um die "FLOW"-Antwort handelt
             flow_value = response_data[0] + (response_data[1] << 8) #combina los dos Bytes
             flow_value /= 100.0 #wenn der Wert skaliert wurde, teile durch 100
-            if verbose:
-                print(f"Flujo recibido: {flow_value:.2f}")#Fliesskommazahl ausgeben
+            #if verbose:
+        print(f"Flujo de la bomba 1 recibido: {flow_value:.2f}")#Fliesskommazahl ausgeben
         
         #Ausgabe der gesamt empfangenen Antwort
         if verbose:
