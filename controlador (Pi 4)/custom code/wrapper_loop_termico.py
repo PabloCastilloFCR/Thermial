@@ -5,6 +5,10 @@ from modulo_valvulas_loop_termico import Valvulas
 from modulo_calentador_loop_termico import Calentador
 from modulo_nivel_loop_termico import Estanque
 import time
+import pandas as pd
+from datetime import datetime
+import os
+
 
 # ---------------------------------------------------------------------
 # One-time configuration (e.g. in your main script)
@@ -31,6 +35,7 @@ class SolarLoop:
         self.valvulas = Valvulas()
         self.calentador = Calentador()
         self.estanque = Estanque()
+        self.data_log = []  # Nueva lista para almacenar datos
 
         # Si el usuario quiere verbosidad, baja el umbral del logger
         if verbose:
@@ -53,7 +58,7 @@ class SolarLoop:
     
     def potencia_calentador(self, pwm):
         self.calentador.set_pwm_calentador(pwm)
-        self.log.info("Calentador seteado a %.0f W", pwm * 40)
+        self.log.info("Calentador seteado a %.0f W", (pwm * 40) / 100)
     
     def obtener_temperaturas_calentador(self):
         self.calentador.get_temperaturas()
@@ -85,7 +90,7 @@ class SolarLoop:
         self.estanque.get_temperaturas()
         t3 = self.estanque.temp3
         t4 = self.estanque.temp4
-        self.log.info("Temperaturas estanque: T1=%.2f °C, T2=%.2f °C", t3, t4)
+        self.log.info("Temperaturas estanque: T3=%.2f °C, T4=%.2f °C", t3, t4)
 
     def stop(self):
         print("Detención del Loop")
@@ -106,8 +111,8 @@ class SolarLoop:
         print(f"Flujo Valvula 1: {self.valvulas.flow1} L/min")
         print(f"Flujo Valvula 2: {self.valvulas.flow2} L/min")
         print(f"Nivel Estanque: {self.estanque.nivel} cm")
-        print(f"Temperatura Estanque #1: {self.estanque.temp3:.2f}°C")
-        print(f"Temperatura Estanque #2: {self.estanque.temp4:.2f}°C")
+        print(f"Temperatura Estanque #3: {self.estanque.temp3:.2f}°C")
+        print(f"Temperatura Estanque #4: {self.estanque.temp4:.2f}°C")
     
     def update_status(self):
         self.obtener_flujo_bomba()
@@ -116,6 +121,73 @@ class SolarLoop:
         self.obtener_temperaturas_estanque()
         self.obtener_nivel_estanque()
 
+    def append_to_data_log(self, folder_path="./test_data"):
+        """Colecta los datos actuales y los guarda para Excel"""
+        self.update_status()
+
+        # Colectar datos reales de los sensores
+        data_point = {
+            'Timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'Bomba_Potencia_%': self.bomba.potencia,
+            'Bomba_Flujo_L/min': round(self.bomba.flujo, 2),
+            'Calentador_Potencia_%': self.calentador.potencia,
+            'Calentador_Potencia_W': round((self.calentador.potencia * 40) / 100, 2),
+            'Temp_Entrada_°C': round(self.calentador.temp1, 2),
+            'Temp_Salida_°C': round(self.calentador.temp2, 2),
+            'Valvula1_Estado': 'Abierta' if self.valvulas.state_valve1 else 'Cerrada',
+            'Valvula2_Estado': 'Abierta' if self.valvulas.state_valve2 else 'Cerrada',
+            'Valvula1_Flujo_L/min': round(self.valvulas.flow1, 2),
+            'Valvula2_Flujo_L/min': round(self.valvulas.flow2, 2),
+            'Nivel_Estanque_cm': round(self.estanque.nivel, 1),
+            'Estanque_Temp3_°C': round(self.estanque.temp3, 2),
+            'Estanque_Temp4_°C': round(self.estanque.temp4, 2)
+        }
+    
+        self.data_log.append(data_point)
+        self.log.info(f"Datos colectados: {data_point['Timestamp']} - Total: {len(self.data_log)} puntos")
+
+    def export_to_excel(self, folder_path="./test_data"):
+        """Exporta los datos colectados a Excel"""
+        if not self.data_log:
+            print("No datos para exportar!")
+            return
+        
+        os.makedirs(folder_path, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"solarloop_test_{timestamp}.xlsx"
+        filepath = os.path.join(folder_path, filename)
+
+        df = pd.DataFrame(self.data_log)
+        df.to_excel(filepath, index=False)
+
+        self.log.info(f"Todos los datos exportados: {filepath}")
+        print(f"Excel hecho con {len(self.data_log)} datos: {filepath}")
+        return filepath
+    
+    def clear_data_log(self):
+        """Limpia el log de datos actual"""
+        count = len(self.data_log)
+        self.data_log.clear()
+        self.log.info(f"Log de datos limpiado. {count} puntos eliminados")
+        print(f"Log limpiado: {count} puntos eliminados")
+
+    def get_data_summary(self):
+        """Retorna un resumen de los datos colectados"""
+        if not self.data_log:
+            return "No hay datos colectados"
+        
+        first_time = self.data_log[0]['Timestamp']
+        last_time = self.data_log[-1]['Timestamp']
+        count = len(self.data_log)
+
+        summary = f"""
+=== RESUMEN DE DATOS ===
+Total de puntos: {count}
+Primer registro: {first_time}
+Último registro: {last_time}
+========================
+        """
+        return summary
 
 if __name__ == "__main__":
     loop = SolarLoop(
@@ -126,14 +198,44 @@ if __name__ == "__main__":
         verbose= True
     )
 
-    loop.log.info("Prueba 1: Abrir Valvula 1. Encender Bomba 10 segundos. Apagar todo.")
-    time.sleep(3)
-    loop.abrir_valvula(1)
-    time.sleep(1)
-    loop.potencia_bomba(100)
-    time.sleep(1)
-    loop.print_status()
-    time.sleep(10)
+    # Limpiar cualquier log anterior de datos
+    loop.clear_data_log()
+
+    # Activar componentes necesarios
+    loop.abrir_valvula(1)              # Abrir válvula 1
+    loop.potencia_bomba(80)            # Encender bomba al 70%
+    loop.potencia_calentador(75)       # Encender calentador al 60%
+
+    print("Sistema activado. Iniciando registro de datos por 30 minutos (1 muestra por minuto)...")
+
+    # Guardar el tiempo de inicio
+    tiempo_inicio = time.monotonic()
+    duracion_total = 30 * 60  # 30 minutos en segundos
+    proxima_muestra = tiempo_inicio
+
+    try:
+        while time.monotonic() - tiempo_inicio < duracion_total:
+            ahora = time.monotonic()
+
+            # Si ha pasado un minuto desde la última muestra
+            if ahora >= proxima_muestra:
+                loop.append_to_data_log()  # Guardar datos actuales
+                minutos_transcurridos = int((ahora - tiempo_inicio) // 60)
+                print(f"Muestra {minutos_transcurridos + 1}/30 registrada.")
+                proxima_muestra += 60  # Programar siguiente muestra en 60 segundos
+
+            time.sleep(1)  # Dormir 1 segundo para no saturar el procesador
+
+    except KeyboardInterrupt:
+        print("Medición interrumpida manualmente por el usuario.")
+
+    # Detener todos los dispositivos
     loop.stop()
-    time.sleep(1)
-    loop.print_status()
+    loop.append_to_data_log()  # Guardar estado final
+    print("Sistema detenido. Muestra final registrada.")
+
+    # Mostrar resumen y exportar a Excel
+    print(loop.get_data_summary())
+    loop.export_to_excel()
+
+
