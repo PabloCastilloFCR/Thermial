@@ -50,6 +50,12 @@ class SolarLoop:
         elif num == 2:
             self.valvulas.abrir_valvula(2)
 
+    def cerrar_valvula(self, num):
+        if num == 1:
+            self.valvulas.cerrar_valvula(1)
+        elif num == 2:
+            self.valvulas.cerrar_valvula(2)
+
     def append_to_data_log(self, timestamp):
         self.bomba.get_flujo()
         time.sleep(0.1)

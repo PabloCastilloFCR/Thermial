@@ -33,6 +33,7 @@ def receive_response(address, verbose=False):
         response_cmd = data[0]
         response_len = data[1]
         response_data = data[2:2+response_len]
+        print("Raw bytes:", response_data)
 
         cmd_str = cmd_dict.get(response_cmd, "UNKNOWN")
 
@@ -43,8 +44,8 @@ def receive_response(address, verbose=False):
             
             flow1 /= 100.0
             flow2 /= 100.0
-            if verbose:
-                print(f"Flow 1: {flow1:.2f} L/min, Flow 2: {flow2:.2f} L/min")
+            #if verbose:
+            print(f"Flow 1: {flow1:.2f} L/min, Flow 2: {flow2:.2f} L/min")
             
             valvula1 = "abierta" if valve_status & 0x01 else "cerrada"
             valvula2 = "abierta" if valve_status & 0x02 else "cerrada"
