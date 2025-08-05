@@ -28,5 +28,5 @@ class Disipador:
         i2c_0x15.send_command(self.address, 0, 0x02)
         time.sleep(0.5)
         self.temp5, self.temp6 = i2c_0x15.receive_response(self.address)
-        print(f"temperatura recibida: Temp5 = {self.temp5:.2f}°C, Temp6 = {self.temp6:.2f}°C")
+        #print(f"temperatura recibida: Temp5 = {self.temp5:.2f}°C, Temp6 = {self.temp6:.2f}°C")
         

@@ -41,21 +41,24 @@ def receive_response(addr, verbose=False):
         t4 = (payload[2] | (payload[3] << 8)) / 100.0
         if verbose:
             print(f"temperatura recibida: Temp3={t3:.2f}°C, Temp4={t4:.2f}°C")
+        
+        message = [t3, t4]
+    
     elif response_cmd == 0x14 and response_len == 2:
         #print(f"[DEBUG] raw data level: payload = {payload}, hex = {[hex(b) for b in payload]}")
         lvl_raw = (payload[0] | (payload[1] << 8))
         measured_distance = lvl_raw / 10.0
-        tank_height = 31.8
-        lvl = max(0.0, tank_height - measured_distance)
         #print(f"[DEBUG] distancia medida: {measured_distance:.2f} cm → nivel calculado: {lvl:.2f} cm")
         if verbose:
-            print(f"nivel recibido: {lvl:.2f} cm")
+            print(f"Nivel recibido: {lvl_raw:.2f} cm")
+        
+        message = [measured_distance]
     
     if verbose:
         print(f"Recibido: ID={response_id:02x}, ADD={addr:02x}, CMD={cmd_dict.get(response_cmd,response_cmd)}, LEN={response_len}, DATA={payload}")
     
-    return payload
-
+    #return message
+    return message
  
 if __name__ == "__main__":
     PICO_ADDR = 0x13

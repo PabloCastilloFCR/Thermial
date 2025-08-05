@@ -2,7 +2,7 @@ import smbus2
 import time
 from cmd_dictionary import cmd_dict
 
-def send_command(PICO_ADDRESS, id, cmd, data=[], verbose = True):
+def send_command(PICO_ADDRESS, id, cmd, data=[], verbose = False):
     bus = smbus2.SMBus(1)  # I2C Bus der Raspberry Pi 4
     packet = [id, cmd, len(data)] + data
     bus.write_i2c_block_data(PICO_ADDRESS, 0x00, packet)
@@ -31,7 +31,7 @@ def receive_response(PICO_ADDRESS, verbose = False):
                 temp5_value /= 100.0
                 temp6_value /= 100.0
                 if verbose:
-                    print(f"temperatura recibida: Temp5 = {temp5_value:.2f}°C, Temp6 = {temp6_value:.2f}°C")
+                    print(f"Temperatura recibida: Temp5 = {temp5_value:.2f}°C, Temp6 = {temp6_value:.2f}°C")
                 return temp5_value, temp6_value
             else:
                 print(f"Error: datos incompletos, esperando 4 bytes pero recibo: {response_len}: {response_data}")

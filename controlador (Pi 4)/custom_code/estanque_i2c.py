@@ -9,7 +9,6 @@ class Estanque:
         self.temp3 = 0
         self.temp4 = 0
 
-
     def get_temperaturas(self):
         """
         Solicita y devuelve los dos valores de los sensores de temperatura.
@@ -27,7 +26,11 @@ class Estanque:
             temp4 = (response_data[2] | (response_data[3] << 8)) / 100.0
             self.temp3 = temp3
             self.temp4 = temp4
-            print(f"temperatura recibida: Temp3 = {temp3:.2f}°C, Temp4 = {temp4:.2f}°C")
+            #print(f"Temperatura recibida: Temp3 = {temp3:.2f}°C, Temp4 = {temp4:.2f}°C")
+        
+        elif len(response_data) == 2:
+            self.temp3 = response_data[0]
+            self.temp4 = response_data[1]
         else:
             self.temp3 = -1
             self.temp4 = -1
@@ -50,6 +53,11 @@ class Estanque:
             tank_height = 40.0
             nivel = max(0.0, tank_height - measured_distance)
             self.nivel = nivel
-            print(f"nivel recibido: {nivel:.2f} cm")
+            print(f"Nivel recibido: {measured_distance:.2f} cm")
+        
+        elif len(response_data) == 1:
+            self.nivel = response_data[0]
+            #print(f"Distancia recibida: {self.nivel:.2f} cm")
+
         else:
             self.nivel = -1

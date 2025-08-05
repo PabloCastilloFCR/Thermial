@@ -78,7 +78,7 @@ class Loop:
             self.log.info(f"Flujo bomba 1: {self.bomba1.flujo:.2f} L/min", )
         elif number == 2:
             self.bomba2.get_flujo()
-            self.log.info(f"Flujo bomba 2: {self.bomba1.flujo:.2f}.2f L/min")
+            self.log.info(f"Flujo bomba 2: {self.bomba2.flujo:.2f} L/min")
     
     #Calentador#
     def set_potencia_calentador(self, pwm):
@@ -107,7 +107,7 @@ class Loop:
         self.log.info("Flujo 1: %.2f L/min, Flujo 2: %.2f L/min", f1, f2)
 
     #Estanque#
-    def get_nivel_estanque(self):
+    def get_nivel(self):
         self.estanque.get_nivel()
         nivel_valor = self.estanque.nivel
         self.log.info("Nivel actual: %.1f cm", nivel_valor)
@@ -147,7 +147,7 @@ class Loop:
         self.get_temperaturas_calentador()
         self.get_temperaturas_estanque()
         self.get_temperaturas_disipador()
-        self.get_nivel_estanque()
+        self.get_nivel()
     
     def update_status_dict(self):
         self.update_status()
@@ -219,7 +219,7 @@ class Loop:
         df.to_csv(filepath, index=False)
 
         self.log.info(f"Todos los datos exportados: {filepath}")
-        print(f"Excel hecho con {len(self.data_log)} datos: {filepath}")
+        print(f"CSV hecho con {len(self.data_log)} datos: {filepath}")
         return filepath
     
     def clear_data_log(self):
@@ -262,7 +262,7 @@ if __name__ == "__main__":
 
     # Activar componentes necesarios
     loop.set_abrir_valvula(1)              # Abrir válvula 1
-    loop.set_potencia_bomba(80, 1)            # Encender bomba al 70%
+    loop.set_potencia_bomba(1, 80)            # Encender bomba al 70%
     loop.set_potencia_calentador(75)       # Encender calentador al 60%
 
     print("Sistema activado. Iniciando registro de datos por 30 minutos (1 muestra por minuto)...")
