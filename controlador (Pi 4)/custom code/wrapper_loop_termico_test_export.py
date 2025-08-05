@@ -1,10 +1,10 @@
 # --- Imports der Module ---
 import logging
-from modulo_bomba_flujometro import Bomba    
-from modulo_valvulas_loop_termico import Valvulas    
-from modulo_calentador_loop_termico import Calentador
-from modulo_estanque_loop_termico import Estanque
-from modulo_dissipador_loop_proceso import Dissipador
+from bomba_i2c import Bomba    
+from valvulas_i2c import Valvulas    
+from calentador_i2c import Calentador
+from estanque_i2c import Estanque
+from disipador_i2c import Disipador
 import time
 import pandas as pd
 from datetime import datetime

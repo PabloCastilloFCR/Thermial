@@ -2,10 +2,10 @@ import i2c_0x15  # Modul mit send_command() und receive_response()
 import time
 
 
-class Dissipador:
+class Disipador:
     def __init__(self):
         self.address = 0x15
-        self.device_name = "Modulo Dissipador"
+        self.device_name = "Modulo Disipador"
         self.potencia = 0
         self.temp5 = 0
         self.temp6 = 0

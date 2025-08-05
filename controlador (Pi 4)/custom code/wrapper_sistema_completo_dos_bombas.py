@@ -1,13 +1,11 @@
 import time
 from datetime import datetime
 import pandas as pd
-
-
-from modulo_bomba_flujometro import Bomba    
-from modulo_valvulas_loop_termico import Valvulas    
-from modulo_calentador_loop_termico import Calentador
-from modulo_estanque_loop_termico import Estanque
-from modulo_dissipador_loop_proceso import Dissipador
+from bomba_i2c import Bomba    
+from valvulas_i2c import Valvulas    
+from calentador_i2c import Calentador
+from estanque_i2c import Estanque
+from disipador_i2c import Disipador
 
 shared_data_log = []
 
@@ -29,7 +27,6 @@ class SolarLoop:
     def __init__(self, verbose=False):
         self.verbose = verbose
         self.bomba = Bomba(address=0x10)
-
         self.calentador = Calentador()
         self.valvulas = Valvulas()
         self.estanque = Estanque()
@@ -122,7 +119,7 @@ class ProcessLoop:
     def __init__(self, verbose=False):
         self.verbose = verbose
         self.bomba = Bomba(address=0x14)
-        self.dissipador = Dissipador()
+        self.dissipador = Disipador()
 
 
     def stop(self):
