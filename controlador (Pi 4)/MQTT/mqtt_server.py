@@ -1,4 +1,84 @@
 #!/usr/bin/env python3
+
+"""
+Thermial MQTT controller — publisher & command listener (docstring)
+
+Este script centraliza la lógica de control y telemetría para el lazo "Thermial".
+Se ejecuta en la Raspberry Pi (o en una máquina con acceso al bus I2C) y realiza
+las siguientes funciones principales:
+
+Crea UNA SOLA instancia de la clase Loop (módulo thermial) que encapsula
+el control de bombas, válvulas, calentador, estanque y disipador. Esto evita
+conflictos entre múltiples instancias que intenten escribir sobre el hardware.
+
+Conexión MQTT:
+
+Se conecta a un broker MQTT (BROKER_HOST / BROKER_PORT).
+
+Se suscribe al topic wildcard thermial/+/cmd para recibir comandos dirigidos
+a cualquier módulo (p. ej. thermial/pump1/cmd).
+
+Publica periódicamente el estado completo del lazo en thermial/status como
+JSON (retain=True, qos=1) para que nuevos suscriptores obtengan el último valor.
+
+Despacho de comandos:
+
+Cuando llega un mensaje en thermial/<module>/cmd, se extrae <module> y
+el payload y se llama a handle_command(module, payload).
+
+handle_command mapea módulos a métodos de la instancia Loop, validando
+el payload (se espera entero) y ejecutando la acción correspondiente
+(p. ej. set_potencia_bomba, set_potencia_calentador, abrir/cerrar válvula, etc.).
+
+Logging:
+
+Se configura un logger ("mqtt") con handler de consola.
+
+Ajusta la verbosidad cambiando logger.setLevel(...) (DEBUG, INFO, WARNING).
+
+Robustez y cierre:
+
+client.loop_start() corre el cliente MQTT en background.
+
+Al recibir KeyboardInterrupt se detiene el loop MQTT y se llama a loop.stop()
+para dejar el sistema en un estado seguro (actuadores en 0 / válvulas cerradas).
+
+Parámetros y configuración
+
+BROKER_HOST : dirección IP o hostname del broker MQTT (por defecto: "192.168.2.73").
+
+BROKER_PORT : puerto del broker (por defecto: 1883).
+
+STATUS_TOPIC : topic donde se publica el JSON de estado (por defecto: "thermial/status").
+
+CMD_TOPIC_WC : wildcard para comandos (por defecto: "thermial/+/cmd").
+
+Requisitos
+
+Python 3.x
+
+paho-mqtt (pip3 install paho-mqtt)
+
+El paquete thermial localizado en ../custom_code/thermial respecto a este script.
+
+Notas de seguridad y operación
+
+Si tu broker requiere autenticación, llama a client.username_pw_set(user, pass)
+antes de connect(...).
+
+retain=True en el topic de status hace que nuevos clientes reciban inmediatamente
+el último estado publicado.
+
+Ejecuta este script como servicio (systemd) para producción y considera usar
+monitoreo y restart automático.
+
+Maneja excepciones dentro de la clase Loop para evitar publicar datos inválidos.
+
+Ejemplo de ejecución
+
+$ python3 this_script.py
+"""
+
 import os
 import sys
 import time
