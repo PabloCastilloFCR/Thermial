@@ -178,32 +178,32 @@ class Loop:
         self.update_status()
         self.mqtt_dict = {
             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'bomba1': {
+            'pump1': {
                 'duty': self.bomba1.potencia,
-                'flujo': round(self.bomba1.flujo, 2),
+                'flow': round(self.bomba1.flujo, 2),
             },
-            'bomba2':{
+            'pump2':{
                 'duty': self.bomba2.potencia,
-                'flujo': round(self.bomba2.flujo, 2),
+                'flow': round(self.bomba2.flujo, 2),
             },
-            'calentador':{
+            'heater':{
                 'duty': self.calentador.potencia,
-                'potencia': round((self.calentador.potencia * 40) / 100, 2),
+                'power': round((self.calentador.potencia * 40) / 100, 2),
                 'temp1': round(self.calentador.temp1, 2),
                 'temp2': round(self.calentador.temp2, 2),
             },
-            'valvulas':{
+            'valves':{
                 'valve1_state': 1 if self.valvulas.state_valve1 else 0,
                 'valve2_state': 1 if self.valvulas.state_valve2 else 0,
-                'flujo1': round(self.valvulas.flow1, 2),
-                'flujo2': round(self.valvulas.flow2, 2),
+                'flow1': round(self.valvulas.flow1, 2),
+                'flow2': round(self.valvulas.flow2, 2),
             },
-            'estanque':{
-                'nivel':round(self.estanque.nivel, 1),
+            'tank':{
+                'level':round(self.estanque.nivel, 1),
                 'temp3': round(self.estanque.temp3, 2),
                 'temp4': round(self.estanque.temp4, 2),
             },
-            'disipador':{
+            'radiator':{
                 'duty': self.disipador.potencia,
                 'temp5': round(self.disipador.temp5, 2),
                 'temp6': round(self.disipador.temp6, 2)

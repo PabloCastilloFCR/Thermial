@@ -44,7 +44,7 @@ parser.add_argument("--broker", "-b", default="192.168.2.35", help="MQTT broker 
 parser.add_argument("--port", "-p", default=1883, type=int, help="MQTT broker port")
 parser.add_argument("--status-topic", default="thermial/status", help="Topic donde se publica el estado JSON")
 parser.add_argument("--pump-topic", default="thermial/pump1/cmd", help="Topic de comando para bomba1")
-parser.add_argument("--heater-topic", default="thermial/calentador/cmd", help="Topic de comando para calentador")
+parser.add_argument("--heater-topic", default="thermial/heater/cmd", help="Topic de comando para calentador")
 parser.add_argument("--valve-topic", default="thermial/valve1/cmd", help="Topic de comando para válvula 1")
 parser.add_argument("--controller-topic", default="thermial/controller/status", help="Topic para publicar estado del controlador")
 parser.add_argument("--target", "-t", default=33.0, type=float, help="Temperatura objetivo en °C")
@@ -96,8 +96,9 @@ logger.addHandler(file_handler)
 last_status = None        # último dict JSON recibido
 last_status_ts = None     # datetime del último status recibido
 desired_state = {         # estado deseado para evitar publicaciones repetidas
-    "pump": 0,
+    "pump1": 0,
     "heater": 0,
+    "valve1": 0,
     # guardaremos la valve como por módulo: 'valve1': 0/1
 }
 
@@ -139,7 +140,7 @@ def read_estanque_temp(status_dict):
     """Extrae la temperatura representativa del estanque (promedio temp3/temp4 si existen)."""
     if not status_dict:
         return None
-    est = status_dict.get("estanque") or {}
+    est = status_dict.get("tank") or {}
     t3 = est.get("temp3")
     t4 = est.get("temp4")
     def to_float(x):
@@ -161,13 +162,13 @@ def read_valve_state_from_status(status_dict, valve_module_name="valve1"):
     """
     Dado el dict de status, intenta leer el campo que expresa el estado de la válvula 1.
     Se espera que en status exista status['valvulas']['valve1_state'] == 1 o 0.
-    valve_module_name: 'valve1' o 'valvula1' dependiendo de tu convención.
+    valve_module_name: 'valve1' dependiendo de tu convención.
     """
     if not status_dict:
         return None
-    valv = status_dict.get("valvulas") or {}
-    # intentamos claves comunes: f"{valve_module_name}_state" y con 'valvula' prefijo
-    key1 = f"{valve_module_name}_state"          # e.g., 'valve1_state'
+    valv = status_dict.get("valves") or {}
+    # intentamos claves comunes: f"state1"
+    key1 = f"state1"          # e.g., valve 1 state
     if key1 in valv:
         try:
             return int(valv[key1])
@@ -175,7 +176,7 @@ def read_valve_state_from_status(status_dict, valve_module_name="valve1"):
             return None
     # fallback: buscar cualquier clave que contenga 'valve1' o 'valvula1'
     for k, v in valv.items():
-        if valve_module_name in k or valve_module_name.replace('valve','valvula') in k:
+        if valve_module_name in k:
             try:
                 return int(v)
             except Exception:
@@ -187,23 +188,22 @@ def publish_cmd(client, topic, value):
     global desired_state
     # detectar key para desired_state
     key = None
+    # topic: thermial/module/cmd
     tparts = topic.split("/")
     if len(tparts) >= 2:
-        module = tparts[1]  # ej 'pump1' o 'valve1' o 'calentador'
+        module = tparts[1]  # ej 'pump1' o 'valve1' o 'heater'
     else:
         module = topic
-    if "pump" in module or "bomba" in module:
-        key = "pump"
-    elif "calentador" in module or "heater" in module:
-        key = "heater"
-    elif "valve" in module or "valvula" in module:
-        key = module  # e.g., 'valve1' -> store per-module
-    # comparar con estado deseado
+
+    if module in desired_state.keys():
+        key = module
+    
     try:
         ival = int(value)
     except Exception:
         logger.warning(f"Intentando publicar valor no entero {value} en {topic}")
         return
+    
     if key:
         if desired_state.get(key) == ival:
             logger.debug(f"No se publica en {topic}: valor {ival} igual al deseado")

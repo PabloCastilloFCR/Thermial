@@ -95,7 +95,7 @@ sys.path.append(os.path.join(parent_dir, 'custom_code'))
 from thermial import Loop
 # ——————————————————————————————————————————
 
-BROKER_HOST  = "192.168.2.73"   # IP de tu Pi
+BROKER_HOST  = "192.168.2.35"   # IP de tu Pi
 BROKER_PORT  = 1883
 STATUS_TOPIC = "thermial/status"
 CMD_TOPIC_WC = "thermial/+/cmd"  # wildcard para comandos
@@ -140,11 +140,11 @@ def handle_command(module, payload):
         num = int(module[-1])
         loop.set_potencia_bomba(number=num, potencia=val)
 
-    elif module == "calentador":
-        logger.debug("Heater")
+    elif module == "heater":
+        logger.debug("Calentador")
         loop.set_potencia_calentador(val)
 
-    elif module.startswith("valve") or module.startswith("valvula"):
+    elif module.startswith("valve"):
         logger.debug("Valvulas")
         num = int(module[-1])
         if val:
@@ -152,7 +152,7 @@ def handle_command(module, payload):
         else:
             loop.set_cerrar_valvula(num)
 
-    elif module == "disipador":
+    elif module == "radiator":
         logger.debug("Disipador")
         loop.set_potencia_disipador(val)
 
@@ -175,7 +175,7 @@ try:
         payload = json.dumps(status)
         client.publish(STATUS_TOPIC, payload=payload, qos=1, retain=True)
         logger.debug("Publicando Status")
-        time.sleep(10)   # intervalo de publicación
+        time.sleep(5)   # intervalo de publicación
 
 except KeyboardInterrupt:
     pass
