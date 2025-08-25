@@ -156,6 +156,10 @@ def handle_command(module, payload):
         logger.debug("Disipador")
         loop.set_potencia_disipador(val)
 
+    elif module == "stop":
+        logger.debug("Detener el loop")
+        loop.stop()
+
     else:
         logger.debug("Ninguno")
         logger.warning(f"Módulo desconocido en cmd: {module}")
