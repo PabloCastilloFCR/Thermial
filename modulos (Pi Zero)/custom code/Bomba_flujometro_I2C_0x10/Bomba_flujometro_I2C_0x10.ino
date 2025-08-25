@@ -7,7 +7,7 @@
 #define CMD_GET 0x02               // Comando para solicitar un valor
 #define RESP_FLOW 0x13             // Código de respuesta para el valor del flujo
 
-#define PUMP_PWM_PIN 20            // Pin PWM para la bomba
+#define PUMP_PWM_PIN 23            // Pin PWM para la bomba
 const int sensorPin = 14;          // Pin del flujómetro
 
 
@@ -124,7 +124,7 @@ void requestEvent() {
     Serial.println(flowRate);
 
     //Debugging de la respuesta enviada
-    Serial.print("Respuesta enviada al maestro: ");
+    Serial.print("Respuesta enviada al controlador: ");
     for (int i = 0; i < 5; i++) {
         Serial.print(response[i], HEX);
         Serial.print(" ");

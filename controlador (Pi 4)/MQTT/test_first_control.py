@@ -47,13 +47,13 @@ parser.add_argument("--pump-topic", default="thermial/pump1/cmd", help="Topic de
 parser.add_argument("--heater-topic", default="thermial/calentador/cmd", help="Topic de comando para calentador")
 parser.add_argument("--valve-topic", default="thermial/valve1/cmd", help="Topic de comando para válvula 1")
 parser.add_argument("--controller-topic", default="thermial/controller/status", help="Topic para publicar estado del controlador")
-parser.add_argument("--target", "-t", default=30.0, type=float, help="Temperatura objetivo en °C")
-parser.add_argument("--interval", "-i", default=60, type=int, help="Intervalo de muestreo / control en segundos")
-parser.add_argument("--pump", default=80, type=int, help="Porcentaje de bomba cuando se activa (0-100)")
-parser.add_argument("--heater", default=90, type=int, help="Porcentaje de calentador cuando se activa (0-100)")
+parser.add_argument("--target", "-t", default=33.0, type=float, help="Temperatura objetivo en °C")
+parser.add_argument("--interval", "-i", default=30, type=int, help="Intervalo de muestreo / control en segundos")
+parser.add_argument("--pump", default=100, type=int, help="Porcentaje de bomba cuando se activa (0-100)")
+parser.add_argument("--heater", default=100, type=int, help="Porcentaje de calentador cuando se activa (0-100)")
 parser.add_argument("--hysteresis", default=0.5, type=float, help="Histéresis en °C (para evitar chatter)")
 parser.add_argument("--timeout", default=180, type=int, help="Tiempo máximo (s) que se acepta como 'estado reciente'")
-parser.add_argument("--valve-wait", default=5, type=int, help="Segundos a esperar a que la válvula reporte 'abierta' antes de abortar")
+parser.add_argument("--valve-wait", default=20, type=int, help="Segundos a esperar a que la válvula reporte 'abierta' antes de abortar")
 parser.add_argument("--username", default=None, help="Usuario MQTT (opcional)")
 parser.add_argument("--password", default=None, help="Password MQTT (opcional)")
 parser.add_argument("--client-id", default="thermial_simple_controller", help="Client ID MQTT")
@@ -83,7 +83,12 @@ handler = logging.StreamHandler()
 fmt = "%(asctime)s  %(levelname)-8s  %(message)s"
 handler.setFormatter(logging.Formatter(fmt))
 logger.addHandler(handler)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
+
+# Archivo
+file_handler = logging.FileHandler("thermial_controller.log", mode="a")  # "w" sobrescribe cada vez, usa "a" si quieres acumular
+file_handler.setFormatter(logging.Formatter(fmt))
+logger.addHandler(file_handler)
 
 # ----------------------
 # Estado global
@@ -163,15 +168,9 @@ def read_valve_state_from_status(status_dict, valve_module_name="valve1"):
     valv = status_dict.get("valvulas") or {}
     # intentamos claves comunes: f"{valve_module_name}_state" y con 'valvula' prefijo
     key1 = f"{valve_module_name}_state"          # e.g., 'valve1_state'
-    key2 = f"{valve_module_name.replace('valve','valvula')}_state"  # 'valvula1_state' si aplica
     if key1 in valv:
         try:
             return int(valv[key1])
-        except Exception:
-            return None
-    if key2 in valv:
-        try:
-            return int(valv[key2])
         except Exception:
             return None
     # fallback: buscar cualquier clave que contenga 'valve1' o 'valvula1'
