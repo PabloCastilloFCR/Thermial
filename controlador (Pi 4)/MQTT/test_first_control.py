@@ -95,12 +95,19 @@ logger.addHandler(file_handler)
 # ----------------------
 last_status = None        # último dict JSON recibido
 last_status_ts = None     # datetime del último status recibido
-desired_state = {         # estado deseado para evitar publicaciones repetidas
+last_cmd = {         # estado deseado para evitar publicaciones repetidas
     "pump1": 0,
     "heater": 0,
     "valve1": 0,
-    # guardaremos la valve como por módulo: 'valve1': 0/1
 }
+
+prev_obs = {
+    "pump1": 0,
+    "heater": 0,
+    "valve1": 0,
+}
+_last_pub = {}
+MIN_RESEND_INTERVAL = 1.0  # segundos
 
 # ----------------------
 # MQTT callbacks
@@ -114,7 +121,7 @@ def on_connect(client, userdata, flags, rc):
         logger.error(f"Fallo conexion MQTT, rc={rc}")
 
 def on_message(client, userdata, msg):
-    global last_status, last_status_ts
+    global last_status, last_status_ts, prev_obs
     topic = msg.topic
     payload_bytes = msg.payload
     try:
@@ -127,6 +134,10 @@ def on_message(client, userdata, msg):
             data = json.loads(payload)
             last_status = data
             last_status_ts = datetime.now()
+            # --- REFRESCO DEL ESTADO OBSERVADO CON TU SCHEMA ---
+            prev_obs["valve1"] = read_valve_state_from_status(data, "valve1")
+            prev_obs["pump1"]  = read_pump1_state_from_status(data)
+            prev_obs["heater"] = read_heater_state_from_status(data)
             logger.debug(f"Status recibido a las {last_status_ts.isoformat()}")
         except Exception as e:
             logger.warning(f"No se pudo parsear JSON del status: {e}. Payload raw: {payload_bytes!r}")
@@ -136,7 +147,42 @@ def on_message(client, userdata, msg):
 # ----------------------
 # Helpers
 # ----------------------
-def read_estanque_temp(status_dict):
+
+def _to_int01(v):
+    try:
+        if isinstance(v, str):
+            s = v.strip().lower()
+            if s in ("open","abierta","on","true","1"): return 1
+            if s in ("close","cerrada","off","false","0"): return 0
+        return int(v)
+    except Exception:
+        return None
+    
+def read_pump1_state_from_status(status_dict):
+    """ON si duty>0 o flow>0 (cualquiera positivo)"""
+    if not status_dict: 
+        return None
+    p = status_dict.get("pump1") or {}
+    try:
+        duty = float(p.get("duty", 0) or 0)
+        flow = float(p.get("flow", 0) or 0)
+        return 1 if (duty > 0 or flow > 0) else 0
+    except Exception:
+        return None
+
+def read_heater_state_from_status(status_dict):
+    """ON si duty>0; (opcional) podrias también inferir por power>0"""
+    if not status_dict: 
+        return None
+    h = status_dict.get("heater") or {}
+    try:
+        duty = float(h.get("duty", 0) or 0)
+        # power = float(h.get("power", 0) or 0)  # si prefieres usar potencia
+        return 1 if duty > 0 else 0
+    except Exception:
+        return None
+    
+def read_tank_temp(status_dict):
     """Extrae la temperatura representativa del estanque (promedio temp3/temp4 si existen)."""
     if not status_dict:
         return None
@@ -167,49 +213,40 @@ def read_valve_state_from_status(status_dict, valve_module_name="valve1"):
     if not status_dict:
         return None
     valv = status_dict.get("valves") or {}
-    # intentamos claves comunes: f"state1"
-    key1 = f"state1"          # e.g., valve 1 state
-    if key1 in valv:
-        try:
-            return int(valv[key1])
-        except Exception:
-            return None
-    # fallback: buscar cualquier clave que contenga 'valve1' o 'valvula1'
-    for k, v in valv.items():
-        if valve_module_name in k:
-            try:
-                return int(v)
-            except Exception:
-                return None
-    return None
+    # claves explícitas del schema
+    mapping = {
+        "valve1": "valve1_state",
+        "valve2": "valve2_state",
+    }
+    k = mapping.get(valve_module_name, f"{valve_module_name}_state")
+    v = valv.get(k)
+    try:
+        return int(v) if v is not None else None
+    except Exception:
+        return None
+
 
 def publish_cmd(client, topic, value):
     """Publica un comando (solo si cambia respecto a desired_state para evitar spam)."""
-    global desired_state
-    # detectar key para desired_state
-    key = None
-    # topic: thermial/module/cmd
+    global last_cmd
     tparts = topic.split("/")
-    if len(tparts) >= 2:
-        module = tparts[1]  # ej 'pump1' o 'valve1' o 'heater'
-    else:
-        module = topic
-
-    if module in desired_state.keys():
-        key = module
-    
+    module = tparts[1] if len(tparts) >= 2 else topic  # "pump1","heater","valve1"
     try:
         ival = int(value)
     except Exception:
         logger.warning(f"Intentando publicar valor no entero {value} en {topic}")
         return
-    
-    if key:
-        if desired_state.get(key) == ival:
-            logger.debug(f"No se publica en {topic}: valor {ival} igual al deseado")
-            return
-        desired_state[key] = ival
+
+    # mapea a la clave de observación que estamos manteniendo en prev_obs
+    obs_key = module if module in prev_obs else None
+    observed = prev_obs.get(obs_key)
+
+    if observed is not None and observed == ival:
+        logger.debug(f"No se publica en {topic}: observado {observed} ya coincide con {ival}")
+        return
+
     client.publish(topic, payload=str(ival), qos=1, retain=False)
+    last_cmd[module] = ival  # para telemetría de “último comando”
     logger.info(f"Publicado cmd {topic} = {ival}")
 
 def wait_for_valve_open(timeout_sec=VALVE_WAIT, poll_interval=1):
@@ -252,9 +289,9 @@ def publish_controller_status(client, temp, action, reason):
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "target": TARGET_TEMP,
         "temp": temp,
-        "pump_cmd": desired_state.get("pump"),
-        "heater_cmd": desired_state.get("heater"),
-        "valve_cmd": desired_state.get(VALVE_TOPIC.split("/")[1]),
+        "pump_cmd": last_cmd.get("pump1"),
+        "heater_cmd": last_cmd.get("heater"),
+        "valve_cmd": last_cmd.get("valve1"),
         "action": action,
         "reason": reason
     }
@@ -282,11 +319,11 @@ try:
                 INTERVAL, TARGET_TEMP, HYST)
 
     # Estado inicial (asumir todo apagado)
-    desired_state["pump"] = 0
-    desired_state["heater"] = 0
+    last_cmd["pump1"] = 0
+    last_cmd["heater"] = 0
     # inicial valve key
     valve_module_key = VALVE_TOPIC.split("/")[1] if "/" in VALVE_TOPIC else "valve1"
-    desired_state[valve_module_key] = 0
+    last_cmd[valve_module_key] = 0
 
     while True:
         # esperar INTERVAL segundos por pasos para responder a SIGINT
@@ -308,7 +345,7 @@ try:
             continue
 
         # extrae temperatura representativa del estanque
-        temp = read_estanque_temp(last_status)
+        temp = read_tank_temp(last_status)
         if temp is None:
             logger.warning("No se encontró temperatura del estanque en el status. No se actúa.")
             publish_controller_status(client, None, "idle", "no_temp")
