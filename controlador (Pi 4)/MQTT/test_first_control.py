@@ -20,7 +20,7 @@ Comportamiento resumido:
 - Evita publicar comandos redundantes comparando con desired_state
 
 Uso:
-  python3 controller_simple_with_valve.py --broker 192.168.2.73 --target 55 \
+  python3 test_first_control.py --broker 192.168.2.73 --target 55 
     --interval 60 --pump 60 --heater 80 --valve-topic thermial/valve1/cmd
 
 Requisitos:
