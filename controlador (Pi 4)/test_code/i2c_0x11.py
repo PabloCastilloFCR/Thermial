@@ -5,7 +5,7 @@ from cmd_dictionary import cmd_dict
 
 def send_command(PICO_ADDRESS, id, cmd, data=[], verbose = False):
     bus = smbus2.SMBus(1)  # I2C Bus der Raspberry Pi 4
-    bus.timeout = 1.0
+    bus.timeout = 1.0 #agregar Timeout
     packet = [id, cmd, len(data)] + data
     bus.write_i2c_block_data(PICO_ADDRESS, 0x00, packet)
     cmd_str = "SET" if cmd == 0x01 else "GET"
@@ -15,7 +15,7 @@ def send_command(PICO_ADDRESS, id, cmd, data=[], verbose = False):
 def receive_response(PICO_ADDRESS, verbose = False):
     try:
         bus = smbus2.SMBus(1)  # Canal I2C en la Raspberry Pi 4 para comunicarse con la Rasp. Pi Pico
-        bus.timeout = 1.0
+        bus.timeout = 1.0 #agregar Timeout
         data = bus.read_i2c_block_data(PICO_ADDRESS, 0x00, 8) #expectando 8 bytes
         #print(f"Datos recibidos (sin procesar): {data}")
         response_id = data[0]
@@ -30,14 +30,14 @@ def receive_response(PICO_ADDRESS, verbose = False):
 
         if response_cmd == 0x12:  # Temperatur-Wert
             if len(response_data) == 4: #asegurarnos que recibimos 4 bytes
-                temp_heater1_in_value = response_data[0] + (response_data[1] << 8)
-                temp_heater1_out_value = response_data[2] + (response_data[3] << 8)
-                temp_heater1_in_value /= 100.0
-                temp_heater1_out_value /= 100.0
+                temp1_value = response_data[0] + (response_data[1] << 8)
+                temp2_value = response_data[2] + (response_data[3] << 8)
+                temp1_value /= 100.0
+                temp2_value /= 100.0
                 #print("bytes recibidos:", response_data)
                 if verbose:
-                    print(f"temperatura recibida: temp_heater1_in = {temp_heater1_in_value:.2f}°C, temp_heater1_out = {temp_heater1_out_value:.2f}°C")
-                return temp_heater1_in_value, temp_heater1_out_value
+                    print(f"temperatura recibida: Temp1 = {temp1_value:.2f}°C, Temp2 = {temp2_value:.2f}°C")
+                return temp1_value, temp2_value
             
             else:
                 print(f"Error: datos incompletos, esperando 4 bytes pero recibo: {response_len}: {response_data}")
@@ -66,12 +66,12 @@ if __name__ == "__main__":
         for pico_add in PICO_ADDRESSES:
             # enviar consulta de temperatura (GET)
             send_command(pico_add, 0, 0x02)  # GET temperatura
-            time.sleep(0.5)
+            time.sleep(0.8)
             receive_response(pico_add)
             time.sleep(0.5)
             
             # enviar orden PWM (SET)
-            send_command(pico_add, 0, 0x01, [value])  # GET PWM  
+            send_command(pico_add, 0, 0x01, [value])  # SET PWM  
             time.sleep(1)
             
             

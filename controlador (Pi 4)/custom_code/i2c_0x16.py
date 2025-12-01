@@ -16,7 +16,7 @@ def receive_response(PICO_ADDRESS, verbose = False):
     try:
         bus = smbus2.SMBus(1)  # Canal I2C en la Raspberry Pi 4 para comunicarse con la Rasp. Pi Pico
         bus.timeout = 1.0
-        data = bus.read_i2c_block_data(PICO_ADDRESS, 0x00, 8) #expectando 8 bytes
+        data = bus.read_i2c_block_data(PICO_ADDRESS, 0x00, 5) #expectando 5 bytes
         #print(f"Datos recibidos (sin procesar): {data}")
         response_id = data[0]
         response_cmd = data[1]
@@ -29,18 +29,13 @@ def receive_response(PICO_ADDRESS, verbose = False):
             response_cmd_str = "UNKNOWN"
 
         if response_cmd == 0x12:  # Temperatur-Wert
-            if len(response_data) == 4: #asegurarnos que recibimos 4 bytes
-                temp_heater1_in_value = response_data[0] + (response_data[1] << 8)
-                temp_heater1_out_value = response_data[2] + (response_data[3] << 8)
-                temp_heater1_in_value /= 100.0
-                temp_heater1_out_value /= 100.0
-                #print("bytes recibidos:", response_data)
-                if verbose:
-                    print(f"temperatura recibida: temp_heater1_in = {temp_heater1_in_value:.2f}°C, temp_heater1_out = {temp_heater1_out_value:.2f}°C")
-                return temp_heater1_in_value, temp_heater1_out_value
+            if len(response_data) == 2: #asegurarnos que recibimos 4 bytes
+                temp_out_value = response_data[0] + (response_data[1] << 8)
+                temp_out_value /= 100.0
+                return temp_out_value
             
             else:
-                print(f"Error: datos incompletos, esperando 4 bytes pero recibo: {response_len}: {response_data}")
+                print(f"Error: datos incompletos, esperando 2 bytes pero recibo: {response_len}: {response_data}")
                 return None
                       
         if response_cmd == 0x15: # PWM-Wert
@@ -56,7 +51,7 @@ def receive_response(PICO_ADDRESS, verbose = False):
         return None
 
 if __name__ == "__main__":
-    PICO_ADDRESSES = [0x11]
+    PICO_ADDRESSES = [0x16]
     bus = smbus2.SMBus(1)
 
     value = 0      # PWM para calentador (0-100%)

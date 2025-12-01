@@ -39,11 +39,15 @@ def plot_solar_loop_data(csv_filepath):
         # Clean up column names for easier access (remove special characters and spaces).
         # This is a good practice for writing clean code.
         df.columns = [
-            'Fecha', 'Hora', 'Bomba_Potencia_pct', 'Bomba_Flujo_L_min',
-            'Calentador_Potencia_pct', 'Calentador_Potencia_W', 'Temp_Entrada_C',
-            'Temp_Salida_C', 'Valvula1_Estado', 'Valvula2_Estado',
-            'Valvula1_Flujo_L_min', 'Valvula2_Flujo_L_min', 'Nivel_Estanque_cm',
-            'Estanque_Temp3_C', 'Estanque_Temp4_C', 'Dissipador_Potencia_pct', 'Dissipador_Temp5_C', 'Dissipador_Temp6_C'
+            'Fecha', 'Hora',
+            'Bomba1_Potencia_pct', 'Bomba1_Flujo_L_min',
+            'Calentador_Potencia_pct', 'Calentador_Potencia_W',
+            'Temp_1_Entrada_C', 'Temp_2_Salida_C',
+            'Valvula1_Estado', 'Valvula2_Estado',
+            'Valvula1_Flujo_L_min', 'Valvula2_Flujo_L_min',
+            'Nivel_Estanque_cm', 'Estanque_Temp3_C', 'Estanque_Temp4_C',
+            'Bomba2_Potencia_pct', 'Bomba2_Flujo_L_min',
+            'Dissipador_Potencia_pct', 'Dissipador_Temp5_C', 'Dissipador_Temp6_C'
         ]
 
         print("Data loaded and prepared successfully. Columns available:")
@@ -56,8 +60,8 @@ def plot_solar_loop_data(csv_filepath):
         fig.suptitle(f'Análisis de Datos del Experimento - {experiment_date}', fontsize=16)
 
         # Plot 1: Inlet and Outlet Temperatures
-        axs[0, 0].plot(df.index, df['Temp_Entrada_C'], label='Temp. Entrada (°C)', color='red')
-        axs[0, 0].plot(df.index, df['Temp_Salida_C'], label='Temp. Salida (°C)', color='blue')
+        axs[0, 0].plot(df.index, df['Temp_1_Entrada_C'], label='Temp. Entrada (°C)', color='red')
+        axs[0, 0].plot(df.index, df['Temp_2_Salida_C'], label='Temp. Salida (°C)', color='blue')
         axs[0, 0].set_ylabel('Temperatura (°C)')
         axs[0, 0].set_title('Temperaturas del Calentador')
         axs[0, 0].legend()
@@ -72,7 +76,7 @@ def plot_solar_loop_data(csv_filepath):
         axs[0, 1].grid(True, linestyle='--', alpha=0.6)
 
         # Plot 3: Power Percentages
-        axs[1, 0].plot(df.index, df['Bomba_Potencia_pct'], label='Potencia Bomba (%)', linestyle='--')
+        axs[1, 0].plot(df.index, df['Bomba1_Potencia_pct'], label='Potencia Bomba (%)', linestyle='--')
         axs[1, 0].plot(df.index, df['Calentador_Potencia_pct'], label='Potencia Calentador (%)', linestyle=':')
         axs[1, 0].set_ylabel('Potencia (%)')
         axs[1, 0].set_title('Potencia de Componentes')
@@ -81,7 +85,7 @@ def plot_solar_loop_data(csv_filepath):
         axs[1, 0].set_ylim(0, 100)
 
         # Plot 4: Flow Rates
-        axs[1, 1].plot(df.index, df['Bomba_Flujo_L_min'], label='Flujo Bomba (L/min)')
+        axs[1, 1].plot(df.index, df['Bomba1_Flujo_L_min'], label='Flujo Bomba (L/min)')
         axs[1, 1].plot(df.index, df['Valvula1_Flujo_L_min'], label='Flujo Válvula 1 (L/min)', linestyle='--')
         axs[1, 1].set_ylabel('Flujo (L/min)')
         axs[1, 1].set_title('Flujos del Sistema')
@@ -94,8 +98,9 @@ def plot_solar_loop_data(csv_filepath):
             plt.setp(ax.get_xticklabels(), rotation=30, ha='right')
 
         plt.tight_layout(rect=[0, 0.03, 1, 0.95]) # Adjust layout to make room for suptitle
-        save_path = r"C:\Users\Ricarda-Laura Sack\Desktop\Proyecto Ricarda\Experimentos\Calentador y sensores de temperatura\Plots\plot_experiment.png"
+        save_path = r"C:\Users\Ricarda-Laura Sack\Desktop\Proyecto Ricarda\Experimentos\Calentador y sensores de temperatura\Plots\plot_experiment1.png"
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"✅ Plot saved to: {save_path}")
         plt.show()
 
     except FileNotFoundError:
@@ -107,6 +112,6 @@ if __name__ == '__main__':
     # --- IMPORTANT ---
     # Replace this with the actual path to your CSV file.
    # file_path = r'c:\Users\Pablo Castillo\OneDrive - fraunhofer.cl\Documentos\01. RESEARCH\01. THERMIAL\06. Resultados\solarloop_test_20250625.csv'
-    file_path = "/home/thermial/Desktop/Thermial/controlador (Pi 4)/custom code/test_data/experimento_una_hora2025-07-17_13-45-15.csv"
+    file_path = "/home/thermial/Desktop/test_data/both_loops_2025-10-13_12-29-18.csv"
     plot_solar_loop_data(file_path)
 

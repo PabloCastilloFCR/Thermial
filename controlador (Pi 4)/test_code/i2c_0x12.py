@@ -39,24 +39,24 @@ def receive_response(address, verbose=False):
         cmd_str = cmd_dict.get(response_cmd, "UNKNOWN")
 
         if response_cmd == 0x13 and len(response_data) >= 5:  # data del flujo y información estatus válvulas (abierta/cerrada)
-            flow_valve1_out = response_data[0] + (response_data[1] << 8)
-            flow_valve2_out = response_data[2] + (response_data[3] << 8)
+            flow1 = response_data[0] + (response_data[1] << 8)
+            flow2 = response_data[2] + (response_data[3] << 8)
             valve_status = response_data[4]
             
-            flow_valve1_out /= 100.0
-            flow_valve2_out /= 100.0
+            flow1 /= 100.0
+            flow2 /= 100.0
             if verbose:
-                print(f"Flow valve1: {flow_valve1_out:.2f} L/min, Flow 2: {flow_valve2_out:.2f} L/min")
+                print(f"Flow 1: {flow1:.2f} L/min, Flow 2: {flow2:.2f} L/min")
             
-            valve1 = "abierta" if valve_status & 0x01 else "cerrada"
-            valve2 = "abierta" if valve_status & 0x02 else "cerrada"
+            valvula1 = "abierta" if valve_status & 0x01 else "cerrada"
+            valvula2 = "abierta" if valve_status & 0x02 else "cerrada"
             if verbose:
-                print(f"Valve 1 es {valve1}, Valve 2 es {valve2}")
+                print(f"Valvula 1 es {valvula1}, Valvula 2 es {valvula2}")
 
         if verbose:
             print(f"Respuesta: ADD={PICO_ADDRESS:02x}, CMD={cmd_str}, LEN={response_len}, DATA={response_data}")
         
-        return flow_valve1_out, flow_valve2_out, valve1, valve2
+        return flow1, flow2, valvula1, valvula2
 
     except Exception as e:
         print(f"Error al leer la respuesta: {e}")
@@ -64,22 +64,22 @@ def receive_response(address, verbose=False):
 """ 
 Voy a comentar estas funciones porque están fuera de la norma que definimos.
 
-def abrir_valve1():
+def abrir_valvula1():
      send_command(0, 0x01, [1])
      time.sleep(1)
      receive_response(0)
 
-def cerrar_valve1():
+def cerrar_valvula1():
     send_command(0, 0x01, [3])
     time.sleep(0.1)
     receive_response(0)
 
-def abrir_valve2():
+def abrir_valvula2():
     send_command(0, 0x01, [2])
     time.sleep(0.1)
     receive_response(0)
 
-def cerrar_valve2():
+def cerrar_valvula2():
     send_command(0, 0x01, [4])
     time.sleep(0.1)
     receive_response(0)

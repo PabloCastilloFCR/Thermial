@@ -26,28 +26,28 @@ def receive_response(PICO_ADDRESS, verbose = False):
 
         if response_cmd == 0x12:  # Temperatur-Wert
             if len(response_data) == 4:
-                temp_in_value = response_data[0] + (response_data[1] << 8)
-                temp_out_value = response_data[2] + (response_data[3] << 8)
-                temp_in_value /= 100.0
-                temp_out_value /= 100.0
+                temp5_value = response_data[0] + (response_data[1] << 8)
+                temp6_value = response_data[2] + (response_data[3] << 8)
+                temp5_value /= 100.0
+                temp6_value /= 100.0
                 if verbose:
-                    print(f"Temperatures received: temp_in = {temp_in_value:.2f}°C, temp_out = {temp_out_value:.2f}°C")
-                return temp_in_value, temp_out_value
+                    print(f"Temperatura recibida: Temp5 = {temp5_value:.2f}°C, Temp6 = {temp6_value:.2f}°C")
+                return temp5_value, temp6_value
             else:
-                print(f"Error: incomplete data, expecting 4 bytes but receiving: {response_len}: {response_data}")
+                print(f"Error: datos incompletos, esperando 4 bytes pero recibo: {response_len}: {response_data}")
                 return None
 
         if response_cmd == 0x15:  # PWM-Wert des Ventilators
             if len(response_data) == 1:
                 pwm_value = response_data[0]
             if verbose:
-                print(f"PWM received: {pwm_value}%")
-                print(f"Received: ADD={PICO_ADDRESS:02x}, CMD={response_cmd_str}, LEN={response_len}, DATA={pwm_value}")
+                print(f"PWM recibido: {pwm_value}%")
+                print(f"Recibido: ADD={PICO_ADDRESS:02x}, CMD={response_cmd_str}, LEN={response_len}, DATA={pwm_value}")
         return response_id, response_cmd, response_data
 
     except Exception as e:
         if verbose:
-            print(f"Error while reading the answer: {e}")
+            print(f"Error al leer la respuesta: {e}")
         return None
 
 if __name__ == "__main__":
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     try:
         while True:
             for pico_add in PICO_ADDRESSES:
-                send_command(pico_add, 0, 0x02)  # GET Temperature
+                send_command(pico_add, 0, 0x02)  # GET Temperatur
                 time.sleep(0.5)
                 receive_response(pico_add, verbose=True)
                 time.sleep(0.5)
@@ -73,8 +73,8 @@ if __name__ == "__main__":
                 value += increment
 
     except KeyboardInterrupt:
-        print("Ventilator is turned off")
+        print("Ventilador está siendo apagado")
         for pico_add in PICO_ADDRESSES:
             send_command(pico_add, 0, 0x01, [0], verbose=True)
             time.sleep(0.2) 
-        print("Ventilador OFF.")     
+        print("Ventilador apagado.")     

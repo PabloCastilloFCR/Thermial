@@ -1,17 +1,17 @@
 import i2c_0x12  
 import time
 
-class Valves:
+class Valvulas:
     def __init__(self):
         self.address = 0x12
         self.device_name = "Modulo Valvulas"
-        self.flow_valve1_out = 0
-        self.flow_valve2_out = 0
+        self.flow1 = 0
+        self.flow2 = 0
         self.state_valve1 = None
         self.state_valve2 = None
 
 
-    def open_valve(self, numero):
+    def abrir_valvula(self, numero):
         """
         Abre una válvula específica.
         :param numero: 1 para válvula 1, 2 para válvula 2
@@ -25,7 +25,7 @@ class Valves:
         else:
             raise ValueError("Solo puedes sólo puede pasar un valor entre 1 y 2")
 
-    def close_valve(self, numero):
+    def cerrar_valvula(self, numero):
         """
         Cierra una válvula específica.
         :param numero: 1 para válvula 1, 2 para válvula 2
@@ -39,11 +39,30 @@ class Valves:
         else:
             raise ValueError("Solo puedes sólo puede pasar un valor entre 1 y 2")
 
-    def get_flows(self):
+    def get_flujos(self):
         """
         Solicita y devuelve los valores de los dos flujómetros.
         """
-        i2c_0x12.send_command(self.address, 0x02, [])
-        time.sleep(0.5)
-        self.flow_valve1_out, self.flow_valve2_out, _, _ = i2c_0x12.receive_response(self.address)
-        
+        #i2c_0x12.send_command(self.address, 0x02, [])
+        #time.sleep(0.5)
+        #self.flow1, self.flow2, _, _ = i2c_0x12.receive_response(self.address)
+        """
+        Solución para evitar que no hay un valor válido:
+        """
+        #def get_flujos(self):
+        """
+        Solicita y devuelve los valores de los dos flujómetros.
+        """
+        try:
+            i2c_0x12.send_command(self.address, 0x02, [])
+            time.sleep(0.5)
+            response = i2c_0x12.receive_response(self.address)
+            # Prüfen, ob die Antwort gültig ist und mindestens 2 Werte enthält
+            if response and len(response) >= 2:
+                self.flow1, self.flow2 = response[0], response[1]
+            else:
+                print("Fehler: ungültige Antwort vom Sensor")
+                self.flow1, self.flow2 = 0.0, 0.0
+        except Exception as e:
+            print("Fehler beim Lesen der Flüsse:", e)
+            self.flow1, self.flow2 = 0.0, 0.0

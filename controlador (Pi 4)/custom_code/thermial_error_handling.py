@@ -8,7 +8,7 @@ from estanque_i2c import Tank
 from disipador_i2c import Radiator1
 import time
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime
 import os
 
 
@@ -25,6 +25,50 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)    # verbose: INFO, DEBUG
 # logger.setLevel(logging.WARNING)  # quiet: WARNING, ERROR, CRITICAL
 #Comentario de prueba
+
+def safe_call(func):
+    def wrapper(self, *args, **kwargs):
+        try:
+            return func(self, *args, **kwargs)
+        except OSError as e:
+            if e.errno == 5:
+                self.errors = {
+                "error_type": "Input/output error",
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "function": func.__name__,
+                "recommendation": "check connection between Pi4 and Pi Picos"
+                }
+                self.log.error(f"OSError in {func.__name__}: Input/output error")
+
+            elif e.errno == 110:
+                self.errors = {
+                    "error_type": "Connection timed out",
+                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "function": func.__name__,
+                    "recommendation": "check I2C devices with sudo i2cdetect -y 1"
+                }
+                self.log.error(f"OSError in {func.__name__}: Connection timed out")
+
+        except TypeError as e:
+            if "NoneType" in str(e):
+                self.errors = {
+                    "error_type": "NoneType response: unsupported format string passed to NoneType.__format__",
+                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "function": func.__name__,
+                    "recommendation": "I2C device returned no data, check sensors"
+                }
+                self.log.error(f"TypeError in {func.__name__}: {e}")
+        except ValueError as e:
+            if "too many values to unpack" in str(e):
+                self.errors = {
+                    "error_type": "Invalid I2C response length",
+                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "function": func.__name__,
+                    "recommendation": "I2C device returned more than 2 values. Inspect raw data from receive_response()."
+                }
+                self.log.error(f"ValueError in {func.__name__}: {e}")
+   
+    return wrapper
 
 class Loop:
     """
@@ -48,6 +92,7 @@ class Loop:
         self.tank = Tank()
         self.radiator1 = Radiator1()
         self.data_log = []  # Nueva lista para almacenar datos
+        self.errors = {}
 
         # Si el usuario quiere verbosidad, baja el umbral del logger
         if verbose:
@@ -58,6 +103,7 @@ class Loop:
         self.log = logging.getLogger("loop")
 
     #Pumps#
+    @safe_call
     def set_power_pump(self, number:int, power:int):
         
         """
@@ -83,7 +129,8 @@ class Loop:
             self.log.info(f"Power Pump 2 at {power}%")
             self.pump2.get_flow()
             self.log.info(f"Flow Pump 2: {self.pump2.flow:.2f} L/min")
-        
+
+    @safe_call    
     def get_flow_pump(self, number):
         if number == 1:
             self.pump1.get_flow()
@@ -94,34 +141,41 @@ class Loop:
 
             
     #Heater#
+    @safe_call
     def set_power_heater1(self, pwm):
         self.heater1.set_pwm_heater1(pwm)
         self.log.info("Heater 1 set to %.0f W", (pwm * 40) / 100)
     
+    @safe_call
     def get_temperatures_heater1(self):
         self.heater1.get_temperatures()
         temp_heater1_in = self.heater1.temp_in
         temp_heater1_out = self.heater1.temp_out
         self.log.info(f"Temperatures Heater 1: Inlet H1={temp_heater1_in:.2f} °C, Outlet H1={temp_heater1_out:.2f} °C")
     
+    @safe_call
     def set_power_heater2(self, pwm):
         self.heater2.set_pwm_heater2(pwm)
         self.log.info("Heater 2 set to %.0f W", (pwm * 40) / 100)
 
+    @safe_call
     def get_temperatures_heater2(self):
         self.heater2.get_temperatures()
         temp_heater2_out = self.heater2.temp_out
         self.log.info(f"Temperatures Heater 2: Outlet H2={temp_heater2_out:.2f} °C")    
 
     #Valvulas#
+    @safe_call
     def set_open_valve(self, number):
         self.valves.open_valve(number)
         self.log.info("Valve %d opened", number)
 
+    @safe_call
     def set_close_valve(self, number):
         self.valves.close_valve(number)
         self.log.info("Valve %d closed", number)
 
+    @safe_call
     def get_flows_valves(self):
         self.valves.get_flows()
         #only show flow, if valve is openend, othewrwise 0
@@ -130,11 +184,13 @@ class Loop:
         self.log.info("Flow Valve 1: %.2f L/min, Flow Valve 2: %.2f L/min", flow_valve1_out, flow_valve2_out)
 
     #Estanque#
+    @safe_call
     def get_level_tank(self):
         self.tank.get_level()
         level_tank = self.tank.level
         self.log.info("Current level: %.1f cm", level_tank)
 
+    @safe_call
     def get_temperatures_tank(self):
         self.tank.get_temperatures()
         temp_tank_bottom = self.tank.temp_bottom
@@ -142,10 +198,12 @@ class Loop:
         self.log.info("Temperatures Tank: Bottom=%.2f °C, Top=%.2f °C", temp_tank_bottom, temp_tank_top)
     
     #Radiator#
+    @safe_call
     def set_power_radiator1(self, power):
         self.radiator1.set_pwm_fan(power)
         self.log.info(f"PWM fan of radiator set to {self.radiator1.power}%")
 
+    @safe_call
     def get_temperatures_radiator1(self):
         self.radiator1.get_temperatures()
         temp_radiator1_in = self.radiator1.temp_in
@@ -156,13 +214,18 @@ class Loop:
     #Utilidades#
     def stop(self):
         print("Stop the Loop")
-        self.pump1.set_power(0)
-        self.pump2.set_power(0)
-        self.heater1.set_pwm_heater1(0)
-        self.heater2.set_pwm_heater2(0)
-        self.radiator1.set_pwm_fan(0)
-        self.valves.close_valve(1)
-        self.valves.close_valve(2)
+        print("Apagado de emergencia")
+        self.set_power_pump(1, 0)
+        self.set_power_pump(2, 0)
+        #self.pump2.set_power(0)
+        self.set_power_heater1(0)
+        self.set_power_heater2(0)
+        self.set_close_valve(1)
+        self.set_close_valve(2)
+        self.set_power_radiator1(0)
+        #self.set.radiator1.set_pwm_fan(0)
+        #self.valves.close_valve(1)
+        #self.valves.close_valve(2)
     
     def update_status(self):
         self.get_flow_pump(1)
@@ -173,6 +236,10 @@ class Loop:
         self.get_temperatures_tank()
         self.get_temperatures_radiator1()
         self.get_level_tank()
+
+        if self.errors:
+            return False #if there is an error in dict
+        return True
 
 
     # --- Debug-Funktion für Rohdaten der Pumpen/Valves ---
@@ -210,7 +277,9 @@ class Loop:
 
 
     def update_status_dict(self):
-        self.update_status()
+        status_ok = self.update_status()
+        if not status_ok:
+            return False, self.errors
         now = datetime.now()
         self.status_dict = {
             'timestamp': now.strftime('%Y-%m-%d %H:%M:%S'),
@@ -239,10 +308,13 @@ class Loop:
             'temp_radiator1_in_°C': round(self.radiator1.temp_in, 2),
             'temp_radiator1_out_°C': round(self.radiator1.temp_out, 2)
         }
-        return self.status_dict
+        return True, self.status_dict
     
     def update_status_dict_mqtt(self):
-        self.update_status()
+        status_ok = self.update_status()
+        if not status_ok:
+            return False, self.errors
+        
         self.mqtt_dict = {
             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             'pump1': {
@@ -256,33 +328,33 @@ class Loop:
             'heater1':{
                 'duty':  self.heater1.power,
                 'power': round((self.heater1.power * 40) / 100, 2),
-                'temp1': round(self.heater1.temp_in, 2),
-                'temp2': round(self.heater1.temp_out, 2),
+                'temp_in': round(self.heater1.temp_in, 2),
+                'temp_out': round(self.heater1.temp_out, 2),
             },
             'heater2':{
                 'duty': self.heater2.power,
                 'power': round((self.heater2.power * 40) / 100, 2),
-                'temp3': round(self.heater2.temp_out, 2),
+                'temp_out': round(self.heater2.temp_out, 2),
             },
             'valves':{
                 'valve1_state': 1 if self.valves.state_valve1 else 0,
                 'valve2_state': 1 if self.valves.state_valve2 else 0,
                 'flow_valve1_out': round(self.valves.flow_valve1_out, 2),
-                'flow_valve2_out': round(self.valves.flow_valve2_out, 2),
+                'flow_Valve2_out': round(self.valves.flow_valve2_out, 2),
             },
             'tank':{
-                'level_tank':round(self.tank.level, 1),
-                'temp_tank_bottom': round(self.tank.temp_bottom, 2),
-                'temp_tank_top': round(self.tank.temp_top, 2),
+                'level':round(self.tank.level, 1),
+                'temp_bottom': round(self.tank.temp_bottom, 2),
+                'temp_top': round(self.tank.temp_top, 2),
             },
             'radiator1':{
                 'duty': self.radiator1.power,
-                'temp_radiator1_in': round(self.radiator1.temp_in, 2),
-                'temp_radiator1_out': round(self.radiator1.temp_out, 2)
+                'temp_in': round(self.radiator1.temp_in, 2),
+                'temp_out': round(self.radiator1.temp_out, 2)
             }
         }
         
-        return self.mqtt_dict
+        return True, self.mqtt_dict
 
 
     def print_status(self):
@@ -303,6 +375,7 @@ class Loop:
         print(f"Level Tank: {self.tank.level} cm")
         print(f"Temp tank bottom #3: {self.tank.temp_bottom:.2f}°C")
         print(f"Temp tank top #4: {self.tank.temp_top:.2f}°C")
+        print(f"Status: {'NOT OK' if self.errors else 'OK'}")
     
 
     def append_to_data_log(self, folder_path="./test_data"):
@@ -310,7 +383,7 @@ class Loop:
         self.update_status()
 
         # Colectar datos reales de los sensores
-        data_point = self.update_status_dict()
+        _, data_point = self.update_status_dict()
     
         self.data_log.append(data_point)
         self.log.info(f"Colected data: {data_point['timestamp']} - Total: {len(self.data_log)} points")
@@ -379,41 +452,32 @@ if __name__ == "__main__":
     # Activar componentes necesarios
     loop.set_open_valve(1)              # open valve 1
     loop.set_power_pump(1, 100)          # Start pump x at x %
-    #loop.set_power_pump(2, 100)          # Start pump x at x %
-    loop.set_power_heater1(100)          # start heater 1 at x %
+    loop.set_power_pump(2, 100)          # Start pump x at x %
+    #loop.set_power_heater1(0)          # start heater 1 at x %
     print("Heater1 PWM:", loop.heater1.power)
-    loop.set_power_heater2(100)          # start heater 2 at x %
-    #loop.set_power_radiator1(95)        # start radiator 1 at x % 
+    #loop.set_power_heater2(100)          # start heater 2 at x %
+    loop.set_power_radiator1(100)        # start radiator 1 at x % 
     loop.debug_flows()   # <-- raw values of the pumps / valves
-
+    loop.print_status()
     print("System activated.")
 
     # Guardar el tiempo de inicio
     start_time = time.monotonic()
-    total_duration = 60 * 60 # X * min * seconds 
+    total_duration = 10 * 60 # hours * min * seconds 
     next_sample = start_time
-    interval = 20 # sampling every 20 seconds
-    total_samples = total_duration // interval
 
-    #prints start and estimated end
-    real_start = datetime.now()
-    est_end = real_start + timedelta(seconds=total_duration)
-    print(f"Experiment startet at {real_start.strftime('%H:%M:%S')} | Estimated end at {est_end.strftime('%H:%M:%S')}")
-
-    
     try:
-        sample_count = 0
         while time.monotonic() - start_time < total_duration:
             now = time.monotonic()
 
             # If one minute has passed since the last sample
             if now >= next_sample:
-                sample_count +=1
                 loop.append_to_data_log()  # save current data
-                print(f"Sample {sample_count}/{int(total_samples)} recorded | Estimated end at {est_end.strftime('%H:%M:%S')}")
-                next_sample += interval # Next sample every interval
+                minutos_transcurridos = int((now - start_time) // 60)
+                print(f"Sample {minutos_transcurridos + 1}/30 registrated.")
+                next_sample += 20  # Next sample every 20 seconds
 
-            time.sleep(1)  # Sleep for 1 second to avoid overloading the processo
+            time.sleep(1)  # Sleep for 1 second to avoid overloading the processor
 
     except KeyboardInterrupt:
         print("Measurement interrupted manually by the user.")

@@ -42,15 +42,15 @@ def receive_response(PICO_ADDRESS, verbose=False)-> float:
         #response_cmd_str = cmd_dict[response_cmd]
     # aquí el valor de flujo se extrae de los datos recibidos
         if response_cmd == 0x13: # cmd para flow, Wenn es sich um die "FLOW"-Antwort handelt
-            flow_pump1_value = response_data[0] + (response_data[1] << 8) #combina los dos Bytes
-            flow_pump1_value /= 100.0 #wenn der Wert skaliert wurde, teile durch 100
+            flow_value = response_data[0] + (response_data[1] << 8) #combina los dos Bytes
+            flow_value /= 100.0 #wenn der Wert skaliert wurde, teile durch 100
         if verbose:
-            print(f"Flujo de la bomba recibido: {flow_pump1_value:.2f}")#Fliesskommazahl ausgeben
+            print(f"Flujo de la bomba 1 recibido: {flow_value:.2f}")#Fliesskommazahl ausgeben
         
         #Ausgabe der gesamt empfangenen Antwort
         if verbose:
             print(f"Recibido: ADD={PICO_ADDRESS:02x}, CMD={response_cmd_str}, LEN={response_len}, DATA={response_data}")
-        return flow_pump1_value
+        return flow_value
     except Exception as e:
         print(f"Error al leer la respuesta: {e}")
         return None
@@ -61,31 +61,24 @@ if __name__ == "__main__":
     PICO_ADDRESSES = 0x10 #, 0x11, 0x12, 0x13]  # Direcciones I2C de los uC
     bus = smbus2.SMBus(1)  # Canal I2C en la Raspberry Pi 4
 
-    value = 90
+    value = 70
     increment = 5
 
-    
-    try:
+    while True:
+        # Enviar comando SET con el valor actual de value 
         send_command(PICO_ADDRESSES, 0, 0x01, [value])
-        while True:
-            # Enviar comando SET con el valor actual de value 
-            time.sleep(2)
+        time.sleep(0.5)
 
-            # Enviar comando GET
-            send_command(PICO_ADDRESSES, 0, 0x02)
-            time.sleep(0.1)
+        # Enviar comando GET
+        send_command(PICO_ADDRESSES, 0, 0x02)
+        time.sleep(0.5)
 
-            # Leer la respuesta del dispositivo
-            receive_response(PICO_ADDRESSES, True) #
+        # Leer la respuesta del dispositivo
+        receive_response(PICO_ADDRESSES) #<< aqui esta fallando. 
         
-    except KeyboardInterrupt:
-        print("Deteniendo Bomba")
-        time.sleep(1)
-        send_command(PICO_ADDRESSES, 0, 0x01, [0])
-        
-        #time.sleep(0.5)
+        time.sleep(0.5)
         # Enviar comando SET con el value = 0
-        #send_command(PICO_ADDRESSES, 0, 0x01, [0])
+        #send_command(pico_add, 0, 0x01, [0])
 
     # Incrementar o decrementar el valor de X
     value += increment

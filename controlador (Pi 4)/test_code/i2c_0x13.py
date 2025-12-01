@@ -40,7 +40,7 @@ def receive_response(addr, verbose=False):
         t3 = (payload[0] | (payload[1] << 8)) / 100.0
         t4 = (payload[2] | (payload[3] << 8)) / 100.0
         if verbose:
-            print(f"Temperatures received: temp_tank_bottom={t3:.2f}°C, temp_tank_top={t4:.2f}°C")
+            print(f"temperatura recibida: Temp3={t3:.2f}°C, Temp4={t4:.2f}°C")
         
         message = [t3, t4]
     
@@ -50,13 +50,14 @@ def receive_response(addr, verbose=False):
         measured_distance = lvl_raw / 10.0
         #print(f"[DEBUG] distancia medida: {measured_distance:.2f} cm → nivel calculado: {lvl:.2f} cm")
         if verbose:
-            print(f"Level received: level_tank={lvl_raw:.2f} cm")
+            print(f"Nivel recibido: {lvl_raw:.2f} cm")
         
         message = [measured_distance]
     
     if verbose:
         print(f"Recibido: ID={response_id:02x}, ADD={addr:02x}, CMD={cmd_dict.get(response_cmd,response_cmd)}, LEN={response_len}, DATA={payload}")
     
+    #return message
     return message
  
 if __name__ == "__main__":
