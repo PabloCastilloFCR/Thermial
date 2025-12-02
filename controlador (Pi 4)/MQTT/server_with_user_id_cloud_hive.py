@@ -215,6 +215,12 @@ class ServerLoop(BaseLoop):
                 logger.error(f"Invalid JSON in registration: {payload}")
             return
         
+        # *******************************************************************#
+        if topic == "thermial/energysupply":
+            logger.critical(f"HARDWARE SHUTDWON COMMANS SEND: {payload}")
+            return
+        # *******************************************************************#
+
         # 2) Befehls-Topics (thermial/+/cmd)
         if "/cmd" in topic:
             # Prüfe ob Loop Fehler hat
@@ -342,6 +348,7 @@ def on_connect(client, userdata, flags, rc, properties = None):
         logger.info("Conectado a MQTT, suscribiendo comandos…")
         client.subscribe(CMD_TOPIC_WC, qos=1)
         client.subscribe(REGISTER_TOPIC, qos=1) 
+        client.subscribe("thermial/energysupply", qos=1)
     else:
         logger.error(f"Falló conexión MQTT, rc={rc}")
 
