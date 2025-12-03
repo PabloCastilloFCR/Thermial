@@ -54,5 +54,3 @@ The project organizes code based on the hardware platform it runs on:
 ---
 
 ### ⏭️ Next Step
-
-Would you like me to draft a short **Getting Started** section for the `main` branch, outlining the necessary steps to run the core I2C system?
