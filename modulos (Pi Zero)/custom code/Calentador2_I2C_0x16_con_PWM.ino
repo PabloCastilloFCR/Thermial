@@ -3,7 +3,7 @@
 #include "hardware/pwm.h"
 
 // I2C Konstante
-#define I2C_ADDRESS 0x11  
+#define I2C_ADDRESS 0x16  
 #define CMD_SET 0x01     
 #define CMD_GET_TEMP 0x02 // Neuer Befehl für Temperaturabfrage
 #define RESP_TEMP 0x12  
@@ -13,9 +13,8 @@
 // Variable global de la última orden recibida
 uint8_t lastRequestCmd = 0;
 
-// Definiere SPI-Pins für MAX31865-Sensoren
-#define CS_SENSOR1 17  // Vor dem Heizstab
-#define CS_SENSOR2 21  // Nach dem Heizstab
+// Definiere SPI-Pins für den MAX31865-Sensor
+#define CS_SENSOR1 17  
 
 // PWM für Heizstab
 #define HEATER_PWM_PIN 14
@@ -26,17 +25,17 @@ uint8_t lastRequestCmd = 0;
 
 // Initialisierung der Sensoren
 Adafruit_MAX31865 sensor1 = Adafruit_MAX31865(CS_SENSOR1);
-Adafruit_MAX31865 sensor2 = Adafruit_MAX31865(CS_SENSOR2);
+
 
 // Variablen
 uint8_t heater_power = 0;
-float temp_heater1_in = 0.0, temp_heater1_out = 0.0;
+float temp_heater2_out = 0.0;
 
 // PWM Steuerung für den Heizstab
 void setPWM(int pin, int value) {
     gpio_set_function(pin, GPIO_FUNC_PWM);
     uint slice_num = pwm_gpio_to_slice_num(pin);
-    pwm_set_wrap(slice_num, 255);
+    pwm_set_wrap(slice_num, 225);
     pwm_set_gpio_level(pin, value);
     pwm_set_enabled(slice_num, true);
 }
@@ -53,9 +52,8 @@ void setup() {
     //Serial.println("I2C periferico iniciado correctamente");
 
     // inicialiszar MAX31865 
-    sensor1.begin(MAX31865_4WIRE);
-    sensor2.begin(MAX31865_3WIRE);
-    
+    sensor1.begin(MAX31865_3WIRE);
+        
     // inicializar PWM para calentador
     pinMode(HEATER_PWM_PIN, OUTPUT);
     setPWM(HEATER_PWM_PIN, 0);
@@ -65,8 +63,12 @@ void loop() {
     static unsigned long lastRead = 0;
     if (millis() - lastRead >= 1000) {
         lastRead = millis();
-        temp_heater1_in = sensor1.temperature(RNOMINAL, RREF);
-        temp_heater1_out = sensor2.temperature(RNOMINAL, RREF);
+        temp_heater2_out = sensor1.temperature(RNOMINAL, RREF);    
+
+        // Debug-Ausgabe SPÄTER LÖSCHEN
+        //Serial.print("Temp_heater2_out: ");
+        //Serial.print(temp_heater2_out);
+        //Serial.println(" °C");
     }
 }
 
@@ -98,28 +100,27 @@ void requestEvent() {
         //Serial.print("PWM enviado: ");
         //Serial.println(heater_power);
     } else if (lastRequestCmd == CMD_GET_TEMP) {
-    uint16_t temp_heater1_in_scaled = static_cast<uint16_t>(temp_heater1_in * 100);
-    uint16_t temp_heater1_out_scaled = static_cast<uint16_t>(temp_heater1_out * 100);
+    uint16_t temp_heater2_out_scaled = static_cast<uint16_t>(temp_heater2_out * 100);
 
-    uint8_t response[8] = {1, RESP_TEMP, 4, 
-                        (uint8_t)(temp_heater1_in_scaled & 0xFF), 
-                        (uint8_t)((temp_heater1_in_scaled >> 8) & 0xFF), 
-                        (uint8_t)(temp_heater1_out_scaled & 0xFF), 
-                        (uint8_t)((temp_heater1_out_scaled >> 8) & 0xFF)}; 
+    uint8_t response[5] = {1, RESP_TEMP, 2, 
+                        (uint8_t)(temp_heater2_out_scaled & 0xFF), 
+                        (uint8_t)((temp_heater2_out_scaled >> 8) & 0xFF)};
+
+  
                         
     //Serial.print("Response: [");
-    //for (int i = 0; i < 8; i++) {
-    //    Serial.print(response[i]);
-    //    if (i < 7) Serial.print(", ");
+    //for (int i = 0; i < 5; i++) {
+        //Serial.print(response[i]);
+        //if (i < 4) Serial.print(", ");
     //}
     //Serial.println("]");
                     
-    Wire.write(response, 8);
+    Wire.write(response, 5);
 
     //Serial.print("temperatura enviada: ");
-    //Serial.print(temp_heater1_in);
+    //Serial.print(temp_heater2_out);
     //Serial.print(" °C, ");
-    //Serial.println(temp_heater1_out);
+    //Serial.println(temp_heater2_out);
     //Serial.print(" °C, ");
     
     }
