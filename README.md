@@ -1,8 +1,8 @@
 # 🌡️ Thermal System Control
 
-This project implements a **dual-loop control system** for a complex, modeled thermal circulation system (e.g., solar thermal or similar) using a **Multi-Raspberry Pi architecture** and relying on **I2C/MQTT communication**.
+This project implements a **dual-loop control system** for a test rig, that simulates a thermal circulation system with a heat source, a thermal storage and a heat sink. It has an implemented **Master-Peripherie architecture** with a Raspberry Pi 4 as a master and various Raspberry Pi Picos. The system uses the  **I2C protocol** for core hardware control and **MQTT** for remote monitoring and command execution.
 
-It facilitates both local (I2C) and wireless (MQTT) monitoring and control of key actuators (pumps, heaters) and sensors (flow, temperature) within a closed water circuit.
+It facilitates both local (I2C) and wireless (MQTT) monitoring and control of key actuators (pumps, valves and heaters) and obtaining sensor data (flow, temperature) within a closed water circuit.
 
 ---
 
