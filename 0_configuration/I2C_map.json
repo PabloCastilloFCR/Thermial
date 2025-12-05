@@ -1,0 +1,47 @@
+{
+    "PUMP1_SOLAR_LOOP": {
+        "address": "0x10",
+        "type": "Actuator/Sensor",
+        "driver_module": "bomba_i2c",
+        "description": "Pump1 and integrated flowmeter."
+    },
+    "HEATER1_SOLAR_LOOP": {
+        "address": "0x11",
+        "type": "Actuator/Sensor",
+        "driver_module": "calentador_i2c",
+        "description": "Heater1 and temperature sensors."
+    },
+
+    "HEATER2_SOLAR_LOOP": {
+        "address": "0x16",
+        "type": "Actuator",
+        "driver_module": "calentador_dos_i2c",
+        "description": "Heater2."
+    },
+
+    "VALVES": {
+        "address": "0x12",
+        "type": "Actuator",
+        "driver_module": "valvulas_i2c",
+        "description": "Valves and flowmeters of the Solar Loop."
+    },
+
+    "TANK": {
+        "address": "0x13",
+        "type": "Sensor",
+        "driver_module": "estanque_i2c",
+        "description": "Tank level sensor and top/bottom temperature sensors."
+    },
+    "PUMP2_PROCESS_LOOP": {
+        "address": "0x14",
+        "type": "Actuator/Sensor",
+        "driver_module": "bomba_i2c_2",
+        "description": "Pump2 and integrated flowmeter."
+    },
+    "RADIATOR_PROCESS_LOOP": {
+        "address": "0x15",
+        "type": "Actuator/Sensor",
+        "driver_module": "disipador_i2c",
+        "description": "Radiator and temperature sensors."
+    }
+}
