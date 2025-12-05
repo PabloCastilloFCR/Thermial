@@ -1,15 +1,25 @@
 # --- Imports der Module ---
 import logging
+import os
+import sys
+import time
+import pandas as pd
+from datetime import datetime
+
+# add path to other folder
+current_dir = os.path.dirname(os.path.abspath(__file__))
+controller_dir = os.path.dirname(current_dir) # one level up to 2_controller
+drivers_path = os.path.join(controller_dir, '2.1_drivers')
+sys.path.append(drivers_path)
+
 from bomba_i2c import Pump
 from calentador_i2c import Heater1
 from calentador_dos_i2c import Heater2    
 from valvulas_i2c import Valves    
 from estanque_i2c import Tank
 from disipador_i2c import Radiator1
-import time
-import pandas as pd
-from datetime import datetime
-import os
+
+
 
 
 # ---------------------------------------------------------------------
