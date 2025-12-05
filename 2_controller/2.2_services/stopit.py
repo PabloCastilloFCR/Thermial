@@ -1,7 +1,16 @@
 #from modulo_bomba_flujometro import Bomba
 #from modulo_valvulas_loop_termico import Valvulas
+import os
+import sys
+
+# add path to other folder
+current_dir = os.path.dirname(os.path.abspath(__file__))
+controller_dir = os.path.dirname(current_dir) # one level up to 2_controller
+drivers_path = os.path.join(controller_dir, '2.1_drivers')
+sys.path.append(drivers_path)
+
 from bomba_i2c import Pump    
-from dos_valvulas_i2c import Valves    
+from valvulas_i2c import Valves    
 from calentador_i2c import Heater1
 from calentador_dos_i2c import Heater2
 from disipador_i2c import Radiator1

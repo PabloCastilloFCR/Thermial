@@ -473,7 +473,7 @@ if __name__ == "__main__":
 
     # Guardar el tiempo de inicio
     start_time = time.monotonic()
-    total_duration = 10 * 60 # hours * min * seconds 
+    total_duration = 1 * 60 # hours * min * seconds 
     next_sample = start_time
 
     try:
