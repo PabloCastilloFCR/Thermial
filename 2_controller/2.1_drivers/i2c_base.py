@@ -1,5 +1,5 @@
 import smbus2
- 
+import time
 MAX_SAFE_READ_LEN = 32  # Maximum size for the read buffer
  
 def send_command(addr, id_byte, cmd, data=[], verbose=False):

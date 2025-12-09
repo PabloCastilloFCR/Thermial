@@ -5,13 +5,13 @@
 # Code within Tank class automatically manages all necessary internal dependencies
 
 import time
-from . import i2c_adress 
+from . import i2c_address 
 from . import i2c_base   
  
 class Tank:
     def __init__(self, device_key="HEAT_STORAGE", verbose=False):
         # Load the address (0x13) from the JSON map
-        self.address = i2c_adress.load_i2c_address(device_key)
+        self.address = i2c_address.load_i2c_address(device_key)
         if self.address is None:
             raise ValueError(f"ERROR: Address for {device_key} could not be loaded.")
         self.device_name = "Tank Module"

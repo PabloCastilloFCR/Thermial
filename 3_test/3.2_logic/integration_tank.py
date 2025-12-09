@@ -6,15 +6,15 @@ import sys
  
 # --- Path Definition --- 
 # Adds the '2_controller' directory to sys.path to resolve the import
-current_dir = os.path.dirname(os.path.abspath(__file__)) 
-test_dir = os.path.dirname(current_dir) #moves up to 3_test/3.2_logic
-root_dir = os.path.dirname(os.path.dirname(test_dir)) # moves up to project_root/
-drivers_path = os.path.join(root_dir, '2_controller' , '2.1_drivers') 
+current_dir = os.path.dirname(os.path.abspath(__file__)) #current dir 3.2
+test_dir = os.path.dirname(current_dir) #moves up to 3_test from 3.2
+root_dir = os.path.dirname(test_dir) # moves up to Thermial (project root)
+drivers_path = os.path.join(root_dir, '2_controller' , '2.1_drivers') #moves from thermial to 2.1
 sys.path.append(drivers_path)
 # -----------------------
  
 # Import the driver class from the new structure
-from estanque_i2c import Tank
+from tank_i2c import Tank
  
 if __name__ == "__main__":
     # Create an instance of the Tank class using the JSON key
