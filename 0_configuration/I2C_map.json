@@ -26,7 +26,7 @@
         "description": "Valves and flowmeters of the Solar Loop."
     },
 
-    "TANK": {
+    "HEAT_STORAGE": {
         "address": "0x13",
         "type": "Sensor",
         "driver_module": "estanque_i2c",
