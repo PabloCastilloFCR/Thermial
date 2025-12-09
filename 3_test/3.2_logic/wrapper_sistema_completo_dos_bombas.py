@@ -1,12 +1,11 @@
 import time
 from datetime import datetime
 import pandas as pd
-from bomba_i2c import Pump    
-from valvulas_i2c import Valves    
-from calentador_i2c import Heater1
+from pumps_i2c import Pump    
+from valves_i2c import Valves    
+from heaters_i2c import Heater
 from tank_i2c import Tank
-from disipador_i2c import Radiator1
-from calentador_dos_i2c import Heater2
+from radiator_i2c import Radiator1
 
 shared_data_log = []
 
