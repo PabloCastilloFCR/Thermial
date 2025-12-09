@@ -3,10 +3,10 @@ import os
 import sys
  
 # --- Path Definition --- 
+# Calculating the absolute path to the driver folder (2.1_drivers)
 current_dir = os.path.dirname(os.path.abspath(__file__)) 
 test_dir = os.path.dirname(current_dir)
 root_dir = os.path.dirname(test_dir)
- 
 drivers_path = os.path.join(root_dir, '2_controller', '2.1_drivers')
 sys.path.append(drivers_path)
 # -----------------------
@@ -15,15 +15,16 @@ sys.path.append(drivers_path)
 from heaters_i2c import Heater
  
 if __name__ == "__main__":
-    heater_module = Heater(device_key="HEATER1_SOLAR_LOOP", verbose=True) 
-    print(f"--- Starting Heater 1 Test at Address 0x{heater_module.address:02x} ---")
-    # Original test parameters
+    # Create an instance of the Heater class using the JSON key for Heater 2
+    heater_module = Heater(device_key="HEATER2_SOLAR_LOOP", verbose=True)
+    print(f"--- Starting Heater 2 Test at Address 0x{heater_module.address:02x} ---")
+    # Test parameters (Original ramp logic from 0x16)
     value = 0 
     increment = 10 
     try:
         while True:
-            # 1. Request and get temperatures (Returns In and Out temps)
-            temp_in, temp_out = heater_module.get_temperatures() 
+            # 1. Request and get temperature (Returns Temp Out only)
+            temp_out = heater_module.get_temperatures() 
             time.sleep(0.5)
             # 2. Optional: Request and get current PWM value
             heater_module.get_pwm()
@@ -37,6 +38,6 @@ if __name__ == "__main__":
                 increment = -increment
                 value += increment
     except KeyboardInterrupt:
-        print("Stopping Heater 1")
+        print("Stopping Heater 2")
         heater_module.set_pwm(0)
-        print("Heater 1 OFF.")
+        print("Heater 2 OFF.")

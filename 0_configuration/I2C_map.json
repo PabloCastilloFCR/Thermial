@@ -2,7 +2,7 @@
     "PUMP1_SOLAR_LOOP": {
         "address": "0x10",
         "type": "Actuator/Sensor",
-        "driver_module": "bomba_i2c",
+        "driver_module": "pumps_i2c",
         "description": "Pump1 and integrated flowmeter."
     },
     "HEATER1_SOLAR_LOOP": {
@@ -29,13 +29,13 @@
     "HEAT_STORAGE": {
         "address": "0x13",
         "type": "Sensor",
-        "driver_module": "estanque_i2c",
+        "driver_module": "tank_i2c",
         "description": "Tank level sensor and top/bottom temperature sensors."
     },
     "PUMP2_PROCESS_LOOP": {
         "address": "0x14",
         "type": "Actuator/Sensor",
-        "driver_module": "bomba_i2c_2",
+        "driver_module": "pumps_i2c",
         "description": "Pump2 and integrated flowmeter."
     },
     "RADIATOR_PROCESS_LOOP": {

@@ -15,7 +15,7 @@ sys.path.append(drivers_path)
  
 # Importing the driver class
 
-from pump_i2c import Pump
+from pumps_i2c import Pump
  
 if __name__ == "__main__":
     # Create an instance of the Pump class using the JSON key for Pump 2
