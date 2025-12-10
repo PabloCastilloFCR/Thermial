@@ -10,17 +10,19 @@ from datetime import datetime
 current_dir = os.path.dirname(os.path.abspath(__file__))
 controller_dir = os.path.dirname(current_dir) # one level up to 2_controller
 drivers_path = os.path.join(controller_dir, '2.1_drivers')
-sys.path.append(drivers_path)
-
-from bomba_i2c import Pump
-from calentador_i2c import Heater1
-from calentador_dos_i2c import Heater2    
-from valvulas_i2c import Valves    
-from estanque_i2c import Tank
-from disipador_i2c import Radiator1
-
-
-
+try:
+    from pump_i2c import Pump 
+    from heater_i2c import Heater
+    from valves_i2c import Valve
+    from tank_i2c import Tank
+    from radiator_i2c import Radiator
+except ModuleNotFoundError:
+    sys.path.append(drivers_path)
+    from pumps_i2c import Pump
+    from heaters_i2c import Heater  
+    from valves_i2c import Valve    
+    from tank_i2c import Tank
+    from radiator_i2c import Radiator
 
 # ---------------------------------------------------------------------
 # One-time configuration (e.g. in your main script)
@@ -87,20 +89,20 @@ class Loop:
     """
     def __init__(self, 
                  pump = Pump,  
-                 heater1 = Heater1,
-                 heater2 = Heater2,
-                 valves = Valves,
+                 heater1 = Heater,
+                 heater2 = Heater,
+                 valves = Valve,
                  tank = Tank, 
-                 radiator1 = Radiator1, 
+                 radiator1 = Radiator, 
                  verbose = False):
         
-        self.pump1 = Pump(address=0x10)
-        self.pump2 = Pump(address=0x14)
-        self.heater1 = Heater1()
-        self.heater2 = Heater2()
-        self.valves = Valves()
-        self.tank = Tank()
-        self.radiator1 = Radiator1()
+        self.pump1 = Pump(device_key="PUMP1_SOLAR_LOOP")
+        self.pump2 = Pump(device_key="PUMP2_PROCESS_LOOP")
+        self.heater1 = Heater(device_key="HEATER1_SOLAR_LOOP")
+        self.heater2 = Heater(device_key="HEATER2_SOLAR_LOOP")
+        self.valves = Valve(device_key="VALVES")
+        self.tank = Tank(device_key="HEAT_STORAGE")
+        self.radiator1 = Radiator(device_key="RADIATOR_PROCESS_LOOP")
         self.data_log = []  # Nueva lista para almacenar datos
         self.errors = {}
 
@@ -153,7 +155,7 @@ class Loop:
     #Heater#
     @safe_call
     def set_power_heater1(self, pwm):
-        self.heater1.set_pwm_heater1(pwm)
+        self.heater1.set_pwm(pwm)
         self.log.info("Heater 1 set to %.0f W", (pwm * 40) / 100)
     
     @safe_call
@@ -165,7 +167,7 @@ class Loop:
     
     @safe_call
     def set_power_heater2(self, pwm):
-        self.heater2.set_pwm_heater2(pwm)
+        self.heater2.set_pwm(pwm)
         self.log.info("Heater 2 set to %.0f W", (pwm * 40) / 100)
 
     @safe_call
@@ -187,7 +189,7 @@ class Loop:
 
     @safe_call
     def get_flows_valves(self):
-        self.valves.get_flows()
+        self.valves.get_flows_and_status()
         #only show flow, if valve is openend, othewrwise 0
         flow_valve1_out = self.valves.flow_valve1_out if self.valves.state_valve1 else 0.0
         flow_valve2_out = self.valves.flow_valve2_out if self.valves.state_valve2 else 0.0
@@ -210,7 +212,7 @@ class Loop:
     #Radiator#
     @safe_call
     def set_power_radiator1(self, power):
-        self.radiator1.set_pwm_fan(power)
+        self.radiator1.set_pwm(power)
         self.log.info(f"PWM fan of radiator set to {self.radiator1.power}%")
 
     @safe_call
@@ -447,12 +449,12 @@ class Loop:
 
 if __name__ == "__main__":
     loop = Loop(
-        pump = Pump(),
-        valves = Valves(),
-        heater1 = Heater1(),
-        heater2 = Heater2(),
-        tank = Tank(),
-        radiator1 = Radiator1(),
+        pump = Pump(device_key="PUMP1_SOLAR_LOOP"),
+        valves = Valve(device_key="VALVES"),
+        heater1 = Heater(device_key="HEATER1_SOLAR_LOOP"),
+        heater2 = Heater(device_key="HEATER2_SOLAR_LOOP"),
+        tank = Tank(device_key="HEAT_STORAGE"),
+        radiator1 = Radiator(device_key="RADIATOR_PROCESS_LOOP"),
         verbose= True
     )
 
