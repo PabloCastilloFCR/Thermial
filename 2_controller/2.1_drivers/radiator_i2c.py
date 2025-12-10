@@ -1,12 +1,12 @@
 import time
-from . import i2c_address 
-from . import i2c_base   
+from i2c_address import load_i2c_address 
+from i2c_base import send_command, receive_response   
 from typing import Tuple, Optional
  
 class Radiator:
     def __init__(self, device_key="RADIATOR_PROCESS_LOOP", verbose=False):
         # Load address 0x15 from JSON map via the key
-        self.address = i2c_address.load_i2c_address(device_key)
+        self.address = load_i2c_address(device_key)
         if self.address is None:
             raise ValueError(f"ERROR: Address for {device_key} could not be loaded.")
         self.device_name = "Radiator Fan Module"
@@ -21,7 +21,7 @@ class Radiator:
         """
         if not 0 <= pwm_value <= 100:
             raise ValueError("PWM must be between 0 and 100")
-        i2c_base.send_command(self.address, 0, 0x01, [int(pwm_value)], verbose=self.verbose)
+        send_command(self.address, 0, 0x01, [int(pwm_value)], verbose=self.verbose)
         time.sleep(0.1)
         self.power = pwm_value
 
@@ -29,9 +29,9 @@ class Radiator:
         """
         Requests and parses the current fan PWM value (Response CMD 0x15).
         """
-        i2c_base.send_command(self.address, 0, 0x01, verbose=self.verbose) # Command 0x01 for GET PWM status
+        send_command(self.address, 0, 0x01, verbose=self.verbose) # Command 0x01 for GET PWM status
         time.sleep(0.5) 
-        response_cmd, payload = i2c_base.receive_response(self.address, verbose=self.verbose)
+        response_cmd, payload = receive_response(self.address, verbose=self.verbose)
 
         # Parsing Logic: Check for Response CMD 0x15 and LENGTH 1
         if response_cmd == 0x15 and len(payload) == 1:
@@ -47,9 +47,9 @@ class Radiator:
         Requests and parses the two temperature values (Response CMD 0x12, 4 bytes).
         Uses GET command (0x02 for Temperature).
         """
-        i2c_base.send_command(self.address, 0, 0x02, verbose=self.verbose)
+        send_command(self.address, 0, 0x02, verbose=self.verbose)
         time.sleep(0.5) 
-        response_cmd, payload = i2c_base.receive_response(self.address, verbose=self.verbose)
+        response_cmd, payload = receive_response(self.address, verbose=self.verbose)
  
         # Parsing Logic: Check for Response CMD 0x12 and LENGTH 4
         if response_cmd == 0x12 and len(payload) == 4:

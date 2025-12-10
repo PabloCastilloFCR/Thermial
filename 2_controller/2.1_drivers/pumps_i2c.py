@@ -5,13 +5,13 @@
 # Code within Pump class automatically manages all necessary internal dependencies
 
 import time
-from . import i2c_address 
-from . import i2c_base   
+from i2c_address import load_i2c_address 
+from i2c_base import send_command, receive_response   
  
 class Pump:
     def __init__(self, device_key="PUMP1_SOLAR_LOOP", verbose=False):
         # Load address 0x10 from JSON map via the key
-        self.address = i2c_address.load_i2c_address(device_key)
+        self.address = load_i2c_address(device_key)
         if self.address is None:
             raise ValueError(f"ERROR: Address for {device_key} could not be loaded.")
         self.device_name = "Pump 1 Flowmeter Module"
@@ -27,7 +27,7 @@ class Pump:
             raise ValueError("Power must be between 0 and 100")
  
         # Command format: ID=0, CMD=0x01, Data=[power]
-        i2c_base.send_command(self.address, 0, 0x01, [int(power)], verbose=self.verbose)
+        send_command(self.address, 0, 0x01, [int(power)], verbose=self.verbose)
         self.power = power
  
     def get_flow(self):
@@ -36,10 +36,10 @@ class Pump:
         Uses the GET command (0x02).
         """
         # 1. Send GET command (0x02)
-        i2c_base.send_command(self.address, 0, 0x02, verbose=self.verbose)
+        send_command(self.address, 0, 0x02, verbose=self.verbose)
         time.sleep(0.1) 
         # 2. Receive raw data
-        response_cmd, payload = i2c_base.receive_response(self.address, verbose=self.verbose)
+        response_cmd, payload = receive_response(self.address, verbose=self.verbose)
         # 3. Parsing Logic: Check for Response CMD 0x13 and LENGTH 2
         if response_cmd == 0x13 and len(payload) == 2:
             # Combine two bytes and scale by 100.0 (Original I2C logic)

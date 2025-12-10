@@ -1,11 +1,12 @@
 import time
-from . import i2c_address 
-from . import i2c_base   
+from i2c_address import load_i2c_address 
+from i2c_base import send_command, receive_response
+
  
 class Heater:
     def __init__(self, device_key: str, verbose=False):
         # Load address based on the key (HEATER1_SOLAR_LOOP or HEATER2_SOLAR_LOOP)
-        self.address = i2c_address.load_i2c_address(device_key)
+        self.address = load_i2c_address(device_key)
         if self.address is None:
             raise ValueError(f"ERROR: Address for {device_key} could not be loaded.")
         self.device_key = device_key # Store key to distinguish between H1 (4 bytes) and H2 (2 bytes)
@@ -21,14 +22,14 @@ class Heater:
         """Sets the PWM value for the heater (0-100%). Uses SET command (0x01)."""
         if not 0 <= pwm_value <= 100:
             raise ValueError("PWM must be between 0 and 100")
-        i2c_base.send_command(self.address, 0, 0x01, [int(pwm_value)], verbose=self.verbose)
+        send_command(self.address, 0, 0x01, [int(pwm_value)], verbose=self.verbose)
         time.sleep(0.1)
         self.power = pwm_value
     def get_pwm(self):
         """Requests and parses the current PWM value (Response CMD 0x15)."""
-        i2c_base.send_command(self.address, 0, 0x01, verbose=self.verbose)
+        send_command(self.address, 0, 0x01, verbose=self.verbose)
         time.sleep(0.5) 
-        response_cmd, payload = i2c_base.receive_response(self.address, verbose=self.verbose)
+        response_cmd, payload = receive_response(self.address, verbose=self.verbose)
         if response_cmd == 0x15 and len(payload) == 1:
             self.power = payload[0]
             if self.verbose:
@@ -69,8 +70,8 @@ class Heater:
  
     def get_temperatures(self):
         """Requests temperature and uses the internal parser."""
-        i2c_base.send_command(self.address, 0, 0x02, verbose=self.verbose)
+        send_command(self.address, 0, 0x02, verbose=self.verbose)
         time.sleep(0.5) 
-        response_cmd, payload = i2c_base.receive_response(self.address, verbose=self.verbose)
+        response_cmd, payload = receive_response(self.address, verbose=self.verbose)
         # Call the correct parser
         return self._parse_temp_response(response_cmd, payload)
