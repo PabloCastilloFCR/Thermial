@@ -1,15 +1,18 @@
 import i2c_0x11  # Modul mit send_command() und receive_response()
 import time
+from i2c_address import load_i2c_address
 
 
 class Heater1:
-    def __init__(self):
-        self.address = 0x11
-        self.device_name = "Modulo Calentador"
+    def __init__(self, device_key="HEATER1_SOLAR_LOOP", verbose=False):
+        self.address = load_i2c_address(device_key)
+        if self.address is None:
+            raise ValueError(f"ERROR: Address for {device_key} could not be loaded.")
+        self.device_name = "Heater 1"
         self.power = 0
-        self.temp_in = 0
-        self.temp_out = 0
-
+        self.temp_in = 0.0
+        self.temp_out = 0.0
+        self.verbose = verbose
 
     def set_pwm_heater1(self, pwm_value):
         """
