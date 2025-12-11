@@ -3,7 +3,8 @@ import time
 import json
 import os
 import sys
- 
+from typing import Optional, Tuple
+
 # --- I2C CONFIGURATION ---
 MAX_SAFE_READ_LEN = 8  # CRITICAL FIX: Reduced to minimize I2C read timeouts.
  

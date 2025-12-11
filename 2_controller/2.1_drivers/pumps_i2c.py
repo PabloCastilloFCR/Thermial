@@ -32,7 +32,7 @@ class Pump:
         """
         # 1. Send GET command (0x02)
         send_command(self.address, 0, 0x02, verbose=self.verbose)
-        time.sleep(0.1)
+        time.sleep(0.5)
         # 2. Receive raw data
         response_cmd, payload = receive_response(self.address, verbose=self.verbose)
         # CRITICAL CHECK: Check if receive_response failed (returned None, None)
@@ -49,4 +49,4 @@ class Pump:
             return self.flow
         else:
             if self.verbose: print(f"[Pump] Unexpected response for Flow (CMD {response_cmd:02x}).")
-            return 0.0 # FIX: Return 0.0 if the received data is invalid or wrong CMD
+            return -1 # FIX: Return 0.0 if the received data is invalid or wrong CMD

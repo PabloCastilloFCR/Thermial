@@ -79,4 +79,4 @@ class Valve:
         else:
             if self.verbose: print(f"[Valves] Error: Unexpected response format (CMD {response_cmd:02x}, LEN {len(payload)}).")
             # FIX 6: Return safe default values on parsing error
-            return 0.0, 0.0, False, False
+            return -1, -1, False, False
