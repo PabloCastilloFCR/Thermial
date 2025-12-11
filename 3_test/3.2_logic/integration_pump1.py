@@ -4,10 +4,9 @@ import sys
  
 # --- Path Definition --- 
 # Calculating the absolute path to the driver folder (2.1_drivers)
-current_dir = os.path.dirname(os.path.abspath(__file__)) #current dir 3.2
-test_dir = os.path.dirname(current_dir) #moves up to 3_test from 3.2
-root_dir = os.path.dirname(test_dir) # moves up to Thermial (project root)
-drivers_path = os.path.join(root_dir, '2_controller', '2.1_drivers') #moves from thermial to 2.1
+current_dir = os.path.dirname(os.path.abspath(__file__)) 
+logic_dir = os.path.dirname(current_dir) #goes to 2_controller
+drivers_path = os.path.join(logic_dir, '2.1_drivers')
 sys.path.append(drivers_path)
 # -----------------------
  

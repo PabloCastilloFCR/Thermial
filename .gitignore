@@ -1,0 +1,8 @@
+gitignore
+
+.venv
+*.pyc
+*.csv
+#generated files
+/test_data/*.csv
+/2_controller/test_data/*.csv

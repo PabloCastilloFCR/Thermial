@@ -11,8 +11,8 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 controller_dir = os.path.dirname(current_dir) # one level up to 2_controller
 drivers_path = os.path.join(controller_dir, '2.1_drivers')
 try:
-    from pump_i2c import Pump 
-    from heater_i2c import Heater
+    from pumps_i2c import Pump 
+    from heaters_i2c import Heater
     from valves_i2c import Valve
     from tank_i2c import Tank
     from radiator_i2c import Radiator

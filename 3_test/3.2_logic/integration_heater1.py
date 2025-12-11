@@ -4,10 +4,8 @@ import sys
  
 # --- Path Definition --- 
 current_dir = os.path.dirname(os.path.abspath(__file__)) 
-test_dir = os.path.dirname(current_dir)
-root_dir = os.path.dirname(test_dir)
- 
-drivers_path = os.path.join(root_dir, '2_controller', '2.1_drivers')
+logic_dir = os.path.dirname(current_dir) #goes to 2_controller
+drivers_path = os.path.join(logic_dir, '2.1_drivers')
 sys.path.append(drivers_path)
 # -----------------------
  

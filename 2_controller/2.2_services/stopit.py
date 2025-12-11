@@ -7,7 +7,6 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 controller_dir = os.path.dirname(current_dir) # one level up to 2_controller
 drivers_path = os.path.join(controller_dir, '2.1_drivers')
 sys.path.append(drivers_path)
- 
 # --- Corrected Imports from 2.1_drivers ---
 # Use the unified module names
 from pumps_i2c import Pump 
