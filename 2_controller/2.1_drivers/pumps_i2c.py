@@ -1,3 +1,12 @@
+import os
+import sys
+ 
+# Ensures the current directory (2.1_drivers) is added to the system path
+# This allows local modules (like i2c_address.py) to be found.
+current_dir = os.path.dirname(os.path.abspath(__file__)) 
+if current_dir not in sys.path:
+    sys.path.append(current_dir)
+    
 import i2c_0x10 
 import time
 # Imports the necessary address resolution for the main Loop class
