@@ -93,7 +93,7 @@ from datetime import datetime
 # Ajuste de ruta para tu módulo Thermial
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir  = os.path.dirname(current_dir)
-sys.path.append(os.path.join(parent_dir, 'custom_code'))
+sys.path.append(os.path.join(parent_dir, 'custom code'))
 
 from thermial_error_handling import Loop as BaseLoop
 
