@@ -19,10 +19,11 @@ from typing import Tuple, Optional
 # CORRECTION: Simplified driver imports, as the Path/Address logic has been
 # consolidated and fixed in i2c_base.py.
 from pumps_i2c import Pump
-from heaters_i2c import Heater
-from valves_i2c import Valve
+from heater_i2c import Heater1
+from heater_two_i2c import Heater2
+from valves_i2c import Valves
 from tank_i2c import Tank
-from radiator_i2c import Radiator
+from radiator_i2c import Radiator1
 # ---------------------------------------------------------------------
 # One-time configuration (e.g. in your main script)
 # ---------------------------------------------------------------------
@@ -83,20 +84,20 @@ class Loop:
     """
     def __init__(self,
                  pump = Pump,  
-                 heater1 = Heater,
-                 heater2 = Heater,
-                 valves = Valve,
+                 heater1 = Heater1,
+                 heater2 = Heater2,
+                 valves = Valves,
                  tank = Tank,
-                 radiator1 = Radiator,
+                 radiator1 = Radiator1,
                  verbose = False):
         # Instance objects with device_key for address loading
         self.pump1 = Pump(device_key="PUMP1_SOLAR_LOOP")
         self.pump2 = Pump(device_key="PUMP2_PROCESS_LOOP")
-        self.heater1 = Heater(device_key="HEATER1_SOLAR_LOOP")
-        self.heater2 = Heater(device_key="HEATER2_SOLAR_LOOP")
-        self.valves = Valve(device_key="VALVES")
+        self.heater1 = Heater1(device_key="HEATER1_SOLAR_LOOP")
+        self.heater2 = Heater2(device_key="HEATER2_SOLAR_LOOP")
+        self.valves = Valves(device_key="VALVES")
         self.tank = Tank(device_key="HEAT_STORAGE")
-        self.radiator1 = Radiator(device_key="RADIATOR_PROCESS_LOOP")
+        self.radiator1 = Radiator1(device_key="RADIATOR_PROCESS_LOOP")
         self.data_log = []  # List to store collected data points
         self.errors = {}
         # Set logger verbosity based on the 'verbose' flag
