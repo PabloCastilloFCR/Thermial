@@ -5,35 +5,37 @@ import os
 import sys
  
 # --- I2C CONFIGURATION ---
-MAX_SAFE_READ_LEN = 8  # CRITICAL FIX: Reduced from 32/16 to minimize I2C read timeouts.
+MAX_SAFE_READ_LEN = 8  # CRITICAL FIX: Reduced to minimize I2C read timeouts.
  
-def load_i2c_address(device_key: str) -> int:
+# --- PATH DEFINITION (Copied from original i2c_address.py) ---
+# This logic is necessary to find the 0_configuration directory from the current file's location.
+current_dir = os.path.dirname(os.path.abspath(__file__))
+controller_dir = os.path.dirname(current_dir) # Moves up to 2_controller/
+root_dir = os.path.dirname(controller_dir) # Moves up to Thermial/
+# Defines the absolute path to the I2C_map.json file
+CONFIG_PATH = os.path.join(root_dir, '0_configuration', 'I2C_map.json')
+# -------------------------------------------------------------
+def load_i2c_address(device_key: str) -> Optional[int]:
     """
-    Loads the I2C address for a device key from the centralized JSON map.
-    This function ensures the Driver class (e.g., Heater) knows its current address.
-    If the script is run directly, it needs to find the map file relative to the project root.
+    Loads the I2C address for a given device key from I2C_map.json.
+    (Uses the correct nested key logic from the original file: ["address"]).
+    :param device_key: The string key defined in the JSON (e.g., "HEAT_STORAGE").
+    :return: The I2C address as an integer (e.g., 19 for 0x13) or None on error.
     """
     try:
-        # 1. Determine the path to the project root (Thermial/2_controller)
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        controller_dir = os.path.dirname(current_dir) # Moves up to 2_controller/
-        project_root = os.path.dirname(controller_dir) # Moves up to Thermial/
-        # 2. Define the path to the JSON file
-        json_path = os.path.join(project_root, '0_configuration', 'i2c_map.json')
-        with open(json_path, 'r') as f:
+        # 1. Open and load the central configuration file
+        with open(CONFIG_PATH, 'r') as f:
             i2c_map = json.load(f)
-        # 3. Lookup the address using the device key
-        address = i2c_map.get(device_key)
-        if address is None:
-            raise KeyError(f"Device key '{device_key}' not found in i2c_map.json.")
-        return address
-    except FileNotFoundError:
-        # Handle the case where the file location is wrong during different types of execution
-        print(f"Error: Configuration file not found at {json_path}")
-        sys.exit(1)
+        # 2. Look up the address string using the provided key (CORRECT: checks the nested "address" key)
+        if device_key in i2c_map:
+            address_str = i2c_map[device_key]["address"]
+            # 3. Convert the hexadecimal string ('0x13') into an integer (19)
+            return int(address_str, 16)
+        else:
+            raise KeyError(f"'{device_key}' not found in I2C_map.json.")
     except Exception as e:
-        print(f"Error loading I2C address for {device_key}: {e}")
-        sys.exit(1)
+        print(f"ERROR loading I2C address for {device_key}: {e}")
+        return None
  
  
 def send_command(addr: int, id_byte: int, cmd: int, data: list = [], verbose: bool = False) -> bool:
@@ -69,7 +71,7 @@ def send_command(addr: int, id_byte: int, cmd: int, data: list = [], verbose: bo
     return success
  
  
-def receive_response(addr: int, verbose: bool = False) -> tuple[int, list]:
+def receive_response(addr: int, verbose: bool = False) -> Tuple[Optional[int], Optional[list]]:
     """
     Generic function to receive the I2C response (GET data) from the slave.
     Returns (response_cmd, payload_list) or (None, None) on failure.
