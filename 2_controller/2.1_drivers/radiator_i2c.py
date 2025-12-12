@@ -14,7 +14,7 @@ class Radiator1:
         self.temp_out = 0
 
 
-    def set_pwm_fan(self, pwm_value):
+    def set_power_radiator1(self, pwm_value):
         """
         Set PWM value of the fan (0–100%).
         """

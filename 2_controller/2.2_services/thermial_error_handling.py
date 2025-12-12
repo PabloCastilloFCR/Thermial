@@ -140,7 +140,7 @@ class Loop:
     #Heater#
     @safe_call
     def set_power_heater1(self, pwm):
-        self.heater1.set_pwm(pwm)
+        self.heater1.set_pwm_heater1(pwm)
         # Assuming max power is 40W for the log calculation
         self.log.info("Heater 1 set to %.0f W", (pwm * 40) / 100)
     @safe_call
@@ -151,7 +151,7 @@ class Loop:
         self.log.info(f"Temperatures Heater 1: Inlet H1={temp_heater1_in:.2f} °C, Outlet H1={temp_heater1_out:.2f} °C")
     @safe_call
     def set_power_heater2(self, pwm):
-        self.heater2.set_pwm(pwm)
+        self.heater2.set_pwm_heater2(pwm)
         # Assuming max power is 40W for the log calculation
         self.log.info("Heater 2 set to %.0f W", (pwm * 40) / 100)
     @safe_call
@@ -170,7 +170,7 @@ class Loop:
         self.log.info("Valve %d closed", number)
     @safe_call
     def get_flows_valves(self):
-        self.valves.get_flows_and_status()
+        self.valves.get_flows()
         # Only show flow if valve is opened, otherwise 0
         flow_valve1_out = self.valves.flow_valve1_out if self.valves.state_valve1 else 0.0
         flow_valve2_out = self.valves.flow_valve2_out if self.valves.state_valve2 else 0.0
@@ -190,7 +190,7 @@ class Loop:
     #Radiator#
     @safe_call
     def set_power_radiator1(self, power):
-        self.radiator1.set_pwm(power)
+        self.radiator1.set_power_radiator1(power)
         self.log.info(f"PWM fan of radiator set to {self.radiator1.power}%")
     @safe_call
     def get_temperatures_radiator1(self):
@@ -402,11 +402,11 @@ class Loop:
 if __name__ == "__main__":
     loop = Loop(
         pump = Pump(device_key="PUMP1_SOLAR_LOOP"),
-        valves = Valve(device_key="VALVES"),
-        heater1 = Heater(device_key="HEATER1_SOLAR_LOOP"),
-        heater2 = Heater(device_key="HEATER2_SOLAR_LOOP"),
+        valves = Valves(device_key="VALVES"),
+        heater1 = Heater1(device_key="HEATER1_SOLAR_LOOP"),
+        heater2 = Heater2(device_key="HEATER2_SOLAR_LOOP"),
         tank = Tank(device_key="HEAT_STORAGE"),
-        radiator1 = Radiator(device_key="RADIATOR_PROCESS_LOOP"),
+        radiator1 = Radiator1(device_key="RADIATOR_PROCESS_LOOP"),
         verbose= True
     )
     # Clear any previous data log

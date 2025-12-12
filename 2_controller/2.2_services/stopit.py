@@ -10,9 +10,10 @@ sys.path.append(drivers_path)
 # --- Corrected Imports from 2.1_drivers ---
 # Use the unified module names
 from pumps_i2c import Pump 
-from valves_i2c import Valve 
-from heaters_i2c import Heater
-from radiator_i2c import Radiator
+from valves_i2c import Valves 
+from heater_i2c import Heater1
+from heater_two_i2c import Heater2
+from radiator_i2c import Radiator1
 # ------------------------------------------
  
 # --- Instantiation with JSON Keys and Unified Classes ---
@@ -22,14 +23,14 @@ pump1 = Pump(device_key="PUMP1_SOLAR_LOOP")
 pump2 = Pump(device_key="PUMP2_PROCESS_LOOP")
  
 # Valves (use Valve class)
-valves = Valve(device_key="VALVES")
+valves = Valves(device_key="VALVES")
  
 # Heaters (use Heater class with specific keys)
-heater1 = Heater(device_key="HEATER1_SOLAR_LOOP")
-heater2 = Heater(device_key="HEATER2_SOLAR_LOOP")
+heater1 = Heater1(device_key="HEATER1_SOLAR_LOOP")
+heater2 = Heater2(device_key="HEATER2_SOLAR_LOOP")
  
 # Radiator (use Radiator class)
-radiator1 = Radiator(device_key="RADIATOR_PROCESS_LOOP")
+radiator1 = Radiator1(device_key="RADIATOR_PROCESS_LOOP")
  
  
 # --- Shutdown Execution (Unified Methods) ---
@@ -47,12 +48,12 @@ valves.close_valve(2)
 print("[STOPIT] Valves 1 & 2 commanded to CLOSE.")
  
 # Heaters (use unified set_pwm method)
-heater1.set_pwm(0)
-heater2.set_pwm(0)
+heater1.set_pwm_heater1(0)
+heater2.set_pwm_heater2(0)
 print("[STOPIT] Heaters 1 & 2 set to 0% PWM.")
  
 # Radiator (use unified set_pwm method)
-radiator1.set_pwm(0)
+radiator1.set_power_radiator1(0)
 print("[STOPIT] Radiator Fan set to 0% PWM.")
  
 print("[STOPIT] Shutdown complete. All actuators OFF/CLOSED.")

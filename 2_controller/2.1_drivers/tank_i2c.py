@@ -21,7 +21,15 @@ class Tank:
         """
         i2c_0x13.send_command(self.address, 0, 0x02)
         time.sleep(0.5)
-        self.temp_bottom, self.temp_top = i2c_0x13.receive_response(self.address)
+        raw_result = i2c_0x13.receive_response(self.address)
+        print(f"[DEBUG TANK] Raw response for temps: {raw_result}")
+        if isinstance(raw_result, (list, tuple)) and len(raw_result) == 2:
+            self.temp_bottom, self.temp_top = raw_result
+        else:
+            self.temp_bottom = -1
+            self.temp_top = -1
+            
+        #self.temp_bottom, self.temp_top = i2c_0x13.receive_response(self.address)
         #print(f"temperatures received: temp_in = {self.temp_in:.2f}°C, temp_out = {self.temp_out:.2f}°C")
 
     def get_level(self):
