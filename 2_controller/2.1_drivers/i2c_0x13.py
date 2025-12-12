@@ -3,6 +3,7 @@ import time
 from cmd_dictionary import cmd_dict
  
 def send_command(addr, id_byte, cmd, verbose=False):
+    print(f"[DEBUG I2C MODUL] Actual address used in 0x13 send_command: {hex(addr)}")
     bus = smbus2.SMBus(1)
     packet = bytes([id_byte, cmd, 0])
     write = smbus2.i2c_msg.write(addr, packet)
@@ -41,6 +42,8 @@ def receive_response(addr, verbose=False):
         t4 = (payload[2] | (payload[3] << 8)) / 100.0
         if verbose:
             print(f"temperatura recibida: Temp3={t3:.2f}°C, Temp4={t4:.2f}°C")
+        return t3, t4
+    
     elif response_cmd == 0x14 and response_len == 2:
         #print(f"[DEBUG] raw data level: payload = {payload}, hex = {[hex(b) for b in payload]}")
         lvl_raw = (payload[0] | (payload[1] << 8))
@@ -50,12 +53,13 @@ def receive_response(addr, verbose=False):
         #print(f"[DEBUG] distancia medida: {measured_distance:.2f} cm → nivel calculado: {lvl:.2f} cm")
         if verbose:
             print(f"nivel recibido: {lvl:.2f} cm")
-    
-    if verbose:
-        print(f"Recibido: ID={response_id:02x}, ADD={addr:02x}, CMD={cmd_dict.get(response_cmd,response_cmd)}, LEN={response_len}, DATA={payload}")
-    
-    return payload
+            print(f"Recibido: ID={response_id:02x}, ADD={addr:02x}, CMD={cmd_dict.get(response_cmd,response_cmd)}, LEN={response_len}, DATA={payload}")
 
+        return lvl
+    
+    return None
+
+        
  
 if __name__ == "__main__":
     PICO_ADDR = 0x13

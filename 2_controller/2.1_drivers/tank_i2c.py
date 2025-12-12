@@ -5,6 +5,7 @@ from i2c_address import load_i2c_address
 class Tank:
     def __init__(self, device_key="HEAT_STORAGE", verbose=False):
         self.address = load_i2c_address(device_key)
+        print(f"[DEBUG I2C TANK] Loaded address for {device_key}: {hex(self.address) if self.address else 'None'}")
         if self.address is None:
             raise ValueError(f"ERROR: Address for {device_key} could not be loaded.")
         #self.address = 0x13
