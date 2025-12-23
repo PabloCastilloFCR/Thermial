@@ -14,15 +14,16 @@ class Tank:
         self.verbose = verbose
 
     def _send_i2c_command(self, cmd_id, cmd_code, data=[]):
-        """Internal method to send I2C commands using raw i2c_msg."""
+        """Internal method to send I2C commands using raw i2c_msg (no register byte)."""
         try:
             bus = smbus2.SMBus(1)
-            packet = [cmd_id, cmd_code, len(data)] + data
-            write = smbus2.i2c_msg.write(self.address, bytes(packet))
+            packet = bytes([cmd_id, cmd_code, len(data)] + data)
+            write = smbus2.i2c_msg.write(self.address, packet)
             bus.i2c_rdwr(write)
             bus.close()
+            time.sleep(0.05) # Small delay for bus stability
             if self.verbose:
-                print(f"[I2C {self.device_name}] Sent: ADD={self.address:02x}, CMD={cmd_code:02x}, DATA={data}")
+                print(f"[I2C {self.device_name}] Sent (Raw): ADD={self.address:02x}, CMD={cmd_code:02x}, DATA={data}")
             return True
         except Exception as e:
             if self.verbose:

@@ -15,13 +15,13 @@ class Valves:
         self.verbose = verbose
 
     def _send_i2c_command(self, cmd_id, cmd_code, data=[]):
-        """Internal method to send I2C commands using raw i2c_msg."""
+        """Internal method to send I2C commands using SMBus block protocol."""
         try:
             bus = smbus2.SMBus(1)
             packet = [cmd_id, cmd_code, len(data)] + data
-            write = smbus2.i2c_msg.write(self.address, bytes(packet))
-            bus.i2c_rdwr(write)
+            bus.write_i2c_block_data(self.address, 0x00, packet)
             bus.close()
+            time.sleep(0.05) # Small delay for bus stability
             if self.verbose:
                 print(f"[I2C {self.device_name}] Sent: ADD={self.address:02x}, CMD={cmd_code:02x}, DATA={data}")
             return True
@@ -31,20 +31,19 @@ class Valves:
             return False
 
     def _receive_i2c_response(self, read_len=7):
-        """Internal method to receive I2C response using raw i2c_msg."""
+        """Internal method to receive I2C response using SMBus block protocol."""
         try:
             bus = smbus2.SMBus(1)
-            read = smbus2.i2c_msg.read(self.address, read_len)
-            bus.i2c_rdwr(read)
-            data = list(read)
+            data = bus.read_i2c_block_data(self.address, 0x00, read_len)
             bus.close()
             
-            if len(data) < 3:
+            if len(data) < 2:
                 return None
-                
-            resp_cmd = data[1]
-            resp_len = data[2]
-            resp_payload = data[3:3+resp_len]
+            
+            # Note: Module 0x12 returns [CMD, LEN, DATA...] without ID byte
+            resp_cmd = data[0]
+            resp_len = data[1]
+            resp_payload = data[2:2+resp_len]
             
             return resp_cmd, resp_payload
         except Exception as e:
