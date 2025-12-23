@@ -1,16 +1,5 @@
-#import os
-#import json
- 
-# MINIMAL PATH CALCULATION: Path to '0_configuration/I2C_map.json'
-# We calculate the path up three levels from the driver file to the base folder ('Thermial'),
-# then down to the configuration file.
-#_current_dir = os.path.dirname(os.path.abspath(__file__)) 
-#_controller_dir = os.path.dirname(_current_dir)
-#_base_dir = os.path.dirname(_controller_dir)
-#JSON_MAP_PATH = os.path.join(_base_dir, '0_configuration', 'I2C_map.json')
-import i2c_0x10 
+import smbus2
 import time
-# Imports the necessary address resolution for the main Loop class
 from i2c_address import load_i2c_address 
 
 class Pump:
@@ -19,35 +8,74 @@ class Pump:
         self.address = load_i2c_address(device_key) 
         if self.address is None:
             raise ValueError(f"ERROR: Address for {device_key} could not be loaded.")
-        self.device_name = "Pump 1"
+        self.device_name = f"Pump ({device_key})"
         self.power = 0
-        self.flow = 0.0 # Set to 0.0 for clean error handling in the main script
-        # self.verbose is stored but not used in the I2C calls below
+        self.flow = 0.0
+        self.verbose = verbose
+
+    def _send_i2c_command(self, cmd_id, cmd_code, data=[]):
+        """Internal method to send I2C commands."""
+        try:
+            bus = smbus2.SMBus(1)
+            packet = [cmd_id, cmd_code, len(data)] + data
+            bus.write_i2c_block_data(self.address, 0x00, packet)
+            bus.close()
+            if self.verbose:
+                print(f"[I2C {self.device_name}] Sent: ADD={self.address:02x}, CMD={cmd_code:02x}, DATA={data}")
+            return True
+        except Exception as e:
+            if self.verbose:
+                print(f"[I2C {self.device_name}] Send Error: {e}")
+            return False
+
+    def _receive_i2c_response(self, read_len=5):
+        """Internal method to receive I2C response."""
+        try:
+            bus = smbus2.SMBus(1)
+            data = bus.read_i2c_block_data(self.address, 0x00, read_len)
+            bus.close()
+            if self.verbose:
+                print(f"[I2C {self.device_name}] Raw Received: {data}")
+            
+            # Basic protocol check: [ID, CMD, LEN, DATA...]
+            if len(data) < 3:
+                return None
+                
+            resp_cmd = data[1]
+            resp_len = data[2]
+            resp_payload = data[3:3+resp_len]
+            
+            return resp_cmd, resp_payload
+        except Exception as e:
+            if self.verbose:
+                print(f"[I2C {self.device_name}] Receive Error: {e}")
+            return None
+
     def set_power(self, power: int):
-        """
-        Sets the pump power.
-        :param power: Pump power (0-100).
-        """
+        """Sets the pump power (0-100)."""
         if not 0 <= power <= 100:
-            raise ValueError("La potencia debe estar entre 0 y 100")
-        # Direct call to i2c_0x10 function, omitting the 'verbose' parameter 
-        # (uses the default set in i2c_0x10.py).
-        i2c_0x10.send_command(self.address, 0, 0x01, [int(power)])
+            raise ValueError("Power must be between 0 and 100")
+        
+        self._send_i2c_command(0, 0x01, [int(power)])
         self.power = power
+
     def get_flow(self):
-        """
-        Requests and returns the current pump flow.
-        :return: Current pump flow.
-        """
-        # Direct call, omitting 'verbose'
-        i2c_0x10.send_command(self.address, 0, 0x02)
-        # Using 0.5s sleep for stable I2C communication (avoids immediate timeout).
+        """Requests and returns the current pump flow."""
+        # Send GET command
+        self._send_i2c_command(0, 0x02)
         time.sleep(0.5) 
-        # Direct call, omitting 'verbose'
-        # NOTE: If you need verbose output here, you must pass the flag: 
-        # i2c_0x10.receive_response(self.address, self.verbose)
-        self.flow = i2c_0x10.receive_response(self.address, False)
-        # Error handling: If communication failed (i2c_0x10 returns None), set to 0.0
-        if self.flow is None:
-            self.flow = 0.0 
+        
+        response = self._receive_i2c_response(read_len=5)
+        if response:
+            cmd, payload = response
+            if cmd == 0x13 and len(payload) >= 2: # FLOW command response
+                flow_raw = payload[0] + (payload[1] << 8)
+                self.flow = flow_raw / 100.0
+                if self.verbose:
+                    print(f"[I2C {self.device_name}] Flow: {self.flow:.2f} L/min")
+            else:
+                self.flow = 0.0
+        else:
+            self.flow = 0.0
+            
         return self.flow

@@ -1,61 +1,95 @@
-import i2c_0x13
+import smbus2
 import time
 from i2c_address import load_i2c_address
 
 class Tank:
     def __init__(self, device_key="HEAT_STORAGE", verbose=False):
         self.address = load_i2c_address(device_key)
-        print(f"[DEBUG I2C TANK] Loaded address for {device_key}: {hex(self.address) if self.address else 'None'}")
         if self.address is None:
             raise ValueError(f"ERROR: Address for {device_key} could not be loaded.")
-        #self.address = 0x13
-        self.device_name = "Tank"
-        self.level = None
+        self.device_name = f"Tank ({device_key})"
+        self.level = 0.0
         self.temp_bottom = 0.0
         self.temp_top = 0.0
+        self.verbose = verbose
 
+    def _send_i2c_command(self, cmd_id, cmd_code, data=[]):
+        """Internal method to send I2C commands."""
+        try:
+            bus = smbus2.SMBus(1)
+            packet = [cmd_id, cmd_code, len(data)] + data
+            bus.write_i2c_block_data(self.address, 0x00, packet)
+            bus.close()
+            if self.verbose:
+                print(f"[I2C {self.device_name}] Sent: ADD={self.address:02x}, CMD={cmd_code:02x}, DATA={data}")
+            return True
+        except Exception as e:
+            if self.verbose:
+                print(f"[I2C {self.device_name}] Send Error: {e}")
+            return False
+
+    def _receive_i2c_response(self, read_len=8):
+        """Internal method to receive I2C response."""
+        try:
+            bus = smbus2.SMBus(1)
+            data = bus.read_i2c_block_data(self.address, 0x00, read_len)
+            bus.close()
+            
+            if len(data) < 3:
+                return None
+                
+            resp_cmd = data[1]
+            resp_len = data[2]
+            resp_payload = data[3:3+resp_len]
+            
+            return resp_cmd, resp_payload
+        except Exception as e:
+            if self.verbose:
+                print(f"[I2C {self.device_name}] Receive Error: {e}")
+            return None
 
     def get_temperatures(self):
-        """
-        Requests and returns the two values from the temperature sensors.
-        :return: (temp_radiator1_in, temp_radiator1_out) or nothing if there is an error
-        """
-        i2c_0x13.send_command(self.address, 0, 0x02)
+        """Requests and returns the two temperature sensor values."""
+        self._send_i2c_command(0, 0x02)
         time.sleep(0.5)
-        raw_result = i2c_0x13.receive_response(self.address)
-        print(f"[DEBUG TANK] Raw response for temps: {raw_result}")
-        if isinstance(raw_result, (list, tuple)) and len(raw_result) == 2:
-            self.temp_bottom, self.temp_top = raw_result
+        
+        response = self._receive_i2c_response(read_len=8)
+        if response:
+            cmd, payload = response
+            if cmd == 0x12 and len(payload) >= 4:
+                self.temp_bottom = (payload[0] | (payload[1] << 8)) / 100.0
+                self.temp_top = (payload[2] | (payload[3] << 8)) / 100.0
+                if self.verbose:
+                    print(f"[I2C {self.device_name}] Temps: Bottom={self.temp_bottom:.2f}°C, Top={self.temp_top:.2f}°C")
+            else:
+                self.temp_bottom = -1.0
+                self.temp_top = -1.0
         else:
-            self.temp_bottom = -1
-            self.temp_top = -1
+            self.temp_bottom = -1.0
+            self.temp_top = -1.0
             
-        #self.temp_bottom, self.temp_top = i2c_0x13.receive_response(self.address)
-        #print(f"temperatures received: temp_in = {self.temp_in:.2f}°C, temp_out = {self.temp_out:.2f}°C")
+        return self.temp_bottom, self.temp_top
 
     def get_level(self):
-        """
-        Solicita y devuelve el nivel actual del estanque.
-        :return: Nivel actual del estanque.
-        """
-        i2c_0x13.send_command(self.address, 0, 0x03)
+        """Requests and returns the current tank level."""
+        self._send_i2c_command(0, 0x03)
         time.sleep(0.5)
-        response = i2c_0x13.receive_response(self.address)
-        if response is None:
-            return None
-        response_data = response
-
-        if len(response_data) >= 2:
-            lvl_raw = response_data[0] | (response_data[1] << 8)
-            measured_distance = lvl_raw / 10.0
-            tank_height = 40.0
-            level = max(0.0, tank_height - measured_distance)
-            self.level = level
-            print(f"Level received: {measured_distance:.2f} cm")
         
-        elif len(response_data) == 1:
-            self.level = response_data[0]
-            #print(f"Distancia recibida: {self.nivel:.2f} cm")
-
+        response = self._receive_i2c_response(read_len=8)
+        if response:
+            cmd, payload = response
+            if cmd == 0x14 and len(payload) >= 2:
+                lvl_raw = (payload[0] | (payload[1] << 8))
+                measured_distance = lvl_raw / 10.0
+                tank_height = 31.8 # Based on i2c_0x13.py hardware specification
+                self.level = max(0.0, tank_height - measured_distance)
+                if self.verbose:
+                    print(f"[I2C {self.device_name}] Level: {self.level:.2f} cm (Dist: {measured_distance:.2f} cm)")
+            elif len(payload) == 1:
+                self.level = float(payload[0])
+            else:
+                self.level = -1.0
         else:
-            self.level = -1
+            self.level = -1.0
+            
+        return self.level
