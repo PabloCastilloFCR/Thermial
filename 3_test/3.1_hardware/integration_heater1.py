@@ -4,13 +4,13 @@ import sys
  
 # --- Path Definition --- 
 current_dir = os.path.dirname(os.path.abspath(__file__)) 
-logic_dir = os.path.dirname(current_dir) #goes to 2_controller
-drivers_path = os.path.join(logic_dir, '2.1_drivers')
+thermial_root = os.path.dirname(os.path.dirname(current_dir)) # goes to root (Thermial)
+drivers_path = os.path.join(thermial_root, '2_controller', '2.1_drivers')
 sys.path.append(drivers_path)
 # -----------------------
  
 # Importing the driver class
-from heaters_i2c import Heater
+from heater_i2c import Heater1 as Heater
  
 if __name__ == "__main__":
     heater_module = Heater(device_key="HEATER1_SOLAR_LOOP", verbose=True) 
@@ -23,11 +23,8 @@ if __name__ == "__main__":
             # 1. Request and get temperatures (Returns In and Out temps)
             temp_in, temp_out = heater_module.get_temperatures() 
             time.sleep(0.5)
-            # 2. Optional: Request and get current PWM value
-            heater_module.get_pwm()
-            time.sleep(0.5)
-            # 3. Send new PWM order (SET)
-            heater_module.set_pwm(value)
+            # 2. Send new PWM order (SET)
+            heater_module.set_pwm_heater1(value)
             time.sleep(1)
             # 4. Increment or decrease PWM value
             value += increment
@@ -36,5 +33,5 @@ if __name__ == "__main__":
                 value += increment
     except KeyboardInterrupt:
         print("Stopping Heater 1")
-        heater_module.set_pwm(0)
+        heater_module.set_pwm_heater1(0)
         print("Heater 1 OFF.")

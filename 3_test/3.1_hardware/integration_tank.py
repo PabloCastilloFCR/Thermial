@@ -5,10 +5,9 @@ import os
 import sys
  
 # --- Path Definition --- 
-# Adds the '2_controller' directory to sys.path to resolve the import
 current_dir = os.path.dirname(os.path.abspath(__file__)) 
-logic_dir = os.path.dirname(current_dir) #goes to 2_controller
-drivers_path = os.path.join(logic_dir, '2.1_drivers')
+thermial_root = os.path.dirname(os.path.dirname(current_dir)) # goes to root (Thermial)
+drivers_path = os.path.join(thermial_root, '2_controller', '2.1_drivers')
 sys.path.append(drivers_path)
 # -----------------------
  

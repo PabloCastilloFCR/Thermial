@@ -3,13 +3,13 @@ import os
 import sys
  
 # --- Path Definition --- 
-current_dir = os.path.dirname(os.path.abspath(__file__)) # current path: 3.2_logic
-logic_dir = os.path.dirname(current_dir) #goes to 2_controller
-drivers_path = os.path.join(logic_dir, '2.1_drivers')
+current_dir = os.path.dirname(os.path.abspath(__file__)) 
+thermial_root = os.path.dirname(os.path.dirname(current_dir)) # goes to root (Thermial)
+drivers_path = os.path.join(thermial_root, '2_controller', '2.1_drivers')
 sys.path.append(drivers_path)
 # -----------------------
  
-from valves_i2c import Valve
+from valves_i2c import Valves as Valve
  
 if __name__ == "__main__":
     valve_module = Valve(device_key="VALVES", verbose=True)
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         # --- ORIGINAL STATUS LOOP ---
         while True:
             print("GET: Requesting Flows and Status")
-            valve_module.get_flows_and_status()
+            valve_module.get_flows()
             time.sleep(3) 
 
     except KeyboardInterrupt:

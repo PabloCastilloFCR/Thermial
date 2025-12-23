@@ -3,15 +3,14 @@ import os
 import sys
  
 # --- Path Definition --- 
-# Calculating the absolute path to the driver folder (2.1_drivers)
 current_dir = os.path.dirname(os.path.abspath(__file__)) 
-logic_dir = os.path.dirname(current_dir) #goes to 2_controller
-drivers_path = os.path.join(logic_dir, '2.1_drivers')
+thermial_root = os.path.dirname(os.path.dirname(current_dir)) # goes to root (Thermial)
+drivers_path = os.path.join(thermial_root, '2_controller', '2.1_drivers')
 sys.path.append(drivers_path)
 # -----------------------
  
 # Importing the driver class
-from heaters_i2c import Heater
+from heater_two_i2c import Heater2 as Heater
  
 if __name__ == "__main__":
     # Create an instance of the Heater class using the JSON key for Heater 2
@@ -25,11 +24,8 @@ if __name__ == "__main__":
             # 1. Request and get temperature (Returns Temp Out only)
             temp_out = heater_module.get_temperatures() 
             time.sleep(0.5)
-            # 2. Optional: Request and get current PWM value
-            heater_module.get_pwm()
-            time.sleep(0.5)
-            # 3. Send new PWM order (SET)
-            heater_module.set_pwm(value)
+            # 2. Send new PWM order (SET)
+            heater_module.set_pwm_heater2(value)
             time.sleep(1)
             # 4. Increment or decrease PWM value
             value += increment
@@ -38,5 +34,5 @@ if __name__ == "__main__":
                 value += increment
     except KeyboardInterrupt:
         print("Stopping Heater 2")
-        heater_module.set_pwm(0)
+        heater_module.set_pwm_heater2(0)
         print("Heater 2 OFF.")
